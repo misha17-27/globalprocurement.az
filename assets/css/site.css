@@ -527,3 +527,9 @@ ul.checks li::before{content:"\2713";position:absolute;left:0;top:1px;width:22px
 .logo img{height:46px;width:auto;display:block}
 .logo-f img{height:100px}
 @media(max-width:640px){.logo img{height:38px}}
+
+/* kartda qiymət */
+.pc .pr{margin-top:auto;padding-top:6px;font-size:13.5px;color:var(--muted)}
+.pc .pr b{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.pc h4{flex:0 0 auto}
+.pc .bd .ds{flex:1}

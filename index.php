@@ -43,9 +43,28 @@ $legacy = [
     'mehsullar' => 'shop', 'catalog' => 'shop', 'kataloq' => 'shop',
 ];
 if (isset($legacy[$route])) { header('Location: ' . url($legacy[$route]), true, 301); exit; }
-if (preg_match('~^(wp-admin|wp-login\.php|wp-content/(themes|plugins)|feed|category|tag|author|page/\d+)~', $route)) {
-    header('Location: ' . url(''), true, 301); exit;
+
+/* Test qovluğu canlıya keçəndən sonra */
+if ($route === 'yeni' || strpos($route, 'yeni/') === 0) { header('Location: ' . url(substr($route, 5)), true, 301); exit; }
+
+/* 410 Gone: WordPress-in texniki ünvanları, spam yazıların arxivləri (kateqoriya/etiket/müəllif/lent)
+   və sındırılmış sayta yeridilmiş 3118 spam yazı — Google onları indeksdən daha tez silir */
+$gone = function (): void {
+    http_response_code(410);
+    header('X-Robots-Tag: noindex');
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>410</title>'
+       . '<p style="font-family:sans-serif;padding:40px">410 — bu səhifə silinib. <a href="' . e(url('')) . '">globalprocurement.az</a></p>';
+    exit;
+};
+if (preg_match('~^(wp-admin|wp-includes|wp-json|wp-login\.php|xmlrpc\.php|wp-content/(themes|plugins|cache)|feed|comments/feed|category|tag|author|\d{4}/\d{2})(/|$)~', $route)) $gone();
+if (preg_match('~^page/\d+$~', $route)) { header('Location: ' . url(''), true, 301); exit; }
+if (preg_match('~^[a-z0-9%-]+$~', $route) && !in_array($route, ['shop', 'haqqimizda', 'elaqe'], true)) {
+    $f = __DIR__ . '/includes/gone.txt';
+    if (is_file($f) && in_array($route, file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES), true)) $gone();
 }
+/* WordPress-in ?p=123, ?s=... kimi köhnə sorğu ünvanları ana səhifənin dublikatı olmasın */
+if ($route === '' && preg_match('~(^|&)(p|page_id|cat|tag|m|attachment_id|author|feed|replytocom)=~', (string)($_SERVER['QUERY_STRING'] ?? ''))) $gone();
 if (preg_match('~^shop/page/\d+$~', $route)) { header('Location: ' . url('shop'), true, 301); exit; }
 
 /* --- kanonik: sonda slash --- */

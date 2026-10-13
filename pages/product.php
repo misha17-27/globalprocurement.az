@@ -34,6 +34,10 @@ $schema = [
     'image' => array_map(function ($i) { $u = img($i); return preg_match('~^https?://~', $u) ? $u : site_origin() . $u; }, $images),
     'brand' => ['@type' => 'Brand', 'name' => $p['brand'] ?: 'Global Procurement'], 'url' => $canon,
 ];
+if (($pn = price_number((string)$p['price'])) !== null) {
+    $schema['offers'] = ['@type' => 'Offer', 'price' => number_format($pn, 2, '.', ''), 'priceCurrency' => 'AZN',
+        'availability' => 'https://schema.org/InStock', 'url' => $canon, 'seller' => ['@type' => 'Organization', 'name' => 'Global Procurement Group MMC']];
+}
 $waMsg = t('wa.hello') . "\n" . $p['title'] . "\n" . $canon;
 $data  = ['id' => (int)$p['id'], 'slug' => $p['slug'], 't' => $p['title'], 'img' => img($images[0]), 'u' => url('product/' . $p['slug'])];
 

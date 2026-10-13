@@ -262,7 +262,7 @@ function products(array $o = []): array {
             FROM products p
             LEFT JOIN product_i18n i ON i.product_id = p.id AND i.lang = ?
             LEFT JOIN product_i18n a ON a.product_id = p.id AND a.lang = ?
-            WHERE ' . implode(' AND ', $w) . ' ORDER BY p.featured DESC, p.sort, p.id';
+            WHERE ' . implode(' AND ', $w) . ' ORDER BY p.sort, p.id';
     if (!empty($o['limit'])) $sql .= ' LIMIT ' . (int)$o['limit'];
     $st = $d->prepare($sql); $st->execute($args);
     $rows = $st->fetchAll();
@@ -317,6 +317,13 @@ function menu_pages(): array {
         $st->execute([lang(), DEFAULT_LANG]);
         return $m = $st->fetchAll();
     } catch (Throwable $e) { return $m = []; }
+}
+
+/** "17 ₼" / "9.50 ₼" → 17.0 / 9.5 (schema.org üçün); qiymət yoxdursa null */
+function price_number(string $p): ?float {
+    if (!preg_match('/\d+(?:[.,]\d+)?/', str_replace(' ', '', $p), $m)) return null;
+    $v = (float)str_replace(',', '.', $m[0]);
+    return $v > 0 ? $v : null;
 }
 
 function brands(): array {

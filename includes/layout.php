@@ -121,6 +121,7 @@ function product_card(array $p, int $i = 0): string {
         . '<div class="bd"><span class="br">' . e($p['brand']) . '</span>'
         . '<a href="' . e($u) . '" class="ttl"><h4>' . e($p['title']) . '</h4></a>'
         . '<p class="ds">' . e((string)$p['short']) . '</p>'
+        . '<div class="pr">' . ($p['price'] !== '' ? '<b>' . e($p['price']) . '</b>' . ($p['unit'] !== '' ? ' <span>/ ' . e($p['unit']) . '</span>' : '') : '<span>' . e(t('product.price_request')) . '</span>') . '</div>'
         . '<div class="ft"><a href="' . e($u) . '" class="btn btn-white">' . e(t('btn.details')) . '</a>'
         . '<button type="button" class="btn btn-blue" data-add="' . $data . '">' . e(t('btn.add_short')) . '</button></div></div></article>';
 }

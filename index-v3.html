@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Global Procurement — İzolyasiya və OSB təchizatı</title>
+<meta name="description" content="Global Procurement Group MMC: OSB-3 Kronospan, Polinor, ISOMAX RUS, Technonicol, WELDER. Topdan və pərakəndə satış, Bakı.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080d18; --bg2:#0e1626; --card:#121c2f; --line:rgba(255,255,255,.09);
+  --text:#e9eef7; --muted:#8a97ad; --blue:#2196f3; --lime:#a3e05f; --green:#8bc34a;
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{overflow-x:clip}
+body{font-family:"Space Grotesk",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{width:min(1280px,100% - 32px);margin-inline:auto}
+.mono{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border-radius:12px;font-weight:600;font-size:15px;transition:.2s;border:1px solid transparent;cursor:pointer;font-family:inherit}
+.btn-lime{background:var(--lime);color:#0a1406}
+.btn-lime:hover{box-shadow:0 0 0 6px rgba(163,224,95,.18)}
+.btn-out{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.02)}
+.btn-out:hover{border-color:var(--blue);color:#fff}
+
+/* header */
+header{position:fixed;inset:0 0 auto 0;z-index:60;transition:.3s}
+header.solid{background:rgba(8,13,24,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.04em}
+.logo small{display:block;font-size:10px;color:var(--muted);letter-spacing:.24em;font-weight:500}
+.hd nav{display:flex;gap:28px;font-size:15px;color:#c3cbda}
+.hd nav a:hover{color:var(--lime)}
+.hd .r{display:flex;gap:10px;align-items:center}
+.ham{display:none;background:none;border:1px solid var(--line);border-radius:10px;color:#fff;width:46px;height:46px;font-size:20px}
+
+/* hero */
+.hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:120px 0 80px}
+.hero::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(700px 400px at 75% 35%,rgba(33,150,243,.28),transparent 65%),
+  radial-gradient(500px 300px at 90% 85%,rgba(163,224,95,.14),transparent 70%)}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at 60% 40%,#000 20%,transparent 70%);opacity:.5}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:60px;align-items:center}
+.hero h1{font-size:clamp(42px,6.2vw,92px);line-height:.95;font-weight:700;letter-spacing:-.04em;margin:22px 0 26px}
+.hero h1 .l{color:var(--lime)}
+.hero h1 .o{-webkit-text-stroke:1.5px #6c7a93;color:transparent}
+.hero p{font-size:18px;color:var(--muted);max-width:540px}
+.hero .acts{display:flex;gap:12px;margin-top:36px;flex-wrap:wrap}
+.status{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 8px;font-size:13px;color:#c3cbda;background:rgba(255,255,255,.02)}
+.status b{background:var(--lime);color:#0a1406;border-radius:999px;padding:2px 10px;font-size:12px}
+.panel{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:28px;padding:22px;position:relative}
+.panel .imgbox{background:#f3ece0;border-radius:18px;overflow:hidden}
+.panel .rows{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.panel .rows div{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.panel .rows b{display:block;font-size:20px}
+.panel .tagline{position:absolute;top:-14px;right:22px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px}
+
+/* ticker */
+.ticker{border-block:1px solid var(--line);overflow:hidden;background:var(--bg2)}
+.ticker .t{display:flex;width:max-content;animation:tk 34s linear infinite}
+.ticker span{padding:22px 36px;font-size:22px;font-weight:600;color:#55627a;white-space:nowrap;display:flex;align-items:center;gap:36px}
+.ticker span::after{content:"";width:8px;height:8px;background:var(--lime);transform:rotate(45deg)}
+@keyframes tk{to{transform:translateX(-50%)}}
+
+section.s{padding:110px 0}
+.head{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:44px;flex-wrap:wrap}
+.head h2{font-size:clamp(32px,4.4vw,58px);line-height:1;letter-spacing:-.03em;margin-top:12px}
+.head p{color:var(--muted);max-width:440px}
+
+/* numbers */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.nums div{padding:34px 30px;border-right:1px solid var(--line)}
+.nums div:last-child{border-right:0}
+.nums b{font-size:52px;font-weight:700;letter-spacing:-.03em;display:block;line-height:1;margin:10px 0 6px}
+.nums b em{font-style:normal;color:var(--lime)}
+.nums p{color:var(--muted);font-size:14px}
+
+/* catalog */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.tabs button{background:transparent;border:1px solid var(--line);color:#c3cbda;padding:10px 18px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;transition:.2s}
+.tabs button:hover{border-color:#41516e}
+.tabs button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.tabs button sup{font-family:"JetBrains Mono";font-size:10px;margin-left:4px;opacity:.6}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:.25s;display:flex;flex-direction:column}
+.item:hover{border-color:rgba(163,224,95,.5);transform:translateY(-4px)}
+.item .ph{background:#fff;aspect-ratio:1.15/1;display:grid;place-items:center;padding:18px}
+.item .ph img{max-height:100%;object-fit:contain}
+.item .tx{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.item h4{font-size:16px;font-weight:600;flex:1}
+.item .ft{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:14px;color:var(--lime)}
+.item.hide{display:none}
+
+/* calc */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.calc .box{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:40px}
+.calc label{display:block;margin:22px 0 10px;font-size:14px;color:#c3cbda}
+.calc input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);color:#fff;padding:16px 18px;border-radius:12px;font:inherit;font-size:20px}
+.calc input:focus{outline:2px solid var(--blue)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seg button{background:var(--bg);border:1px solid var(--line);color:#c3cbda;padding:14px 0;border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+.seg button.on{border-color:var(--lime);color:var(--lime);background:rgba(163,224,95,.06)}
+.range{width:100%;accent-color:var(--lime)}
+.result{background:linear-gradient(150deg,#16305a,#0e1626 70%);display:flex;flex-direction:column;justify-content:space-between}
+.result .big{font-size:clamp(80px,10vw,140px);font-weight:700;letter-spacing:-.05em;line-height:.9;color:#fff}
+.result .big small{font-size:24px;color:var(--muted);letter-spacing:0;margin-left:8px}
+.result ul{list-style:none;display:grid;gap:10px;margin:26px 0}
+.result li{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding-bottom:10px;color:#c3cbda}
+.result li b{color:#fff}
+
+/* welder */
+.weld{display:grid;grid-template-columns:.9fr 1.1fr;gap:16px}
+.weld .img{border-radius:28px;overflow:hidden;background:#fff;position:relative}
+.weld .img img{width:100%;height:100%;object-fit:cover}
+.weld .feat{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.weld .feat div{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px}
+.weld .feat .main{grid-column:span 2;background:var(--bg2)}
+.weld .feat h3{font-size:30px;line-height:1.1;margin:10px 0 12px;letter-spacing:-.02em}
+.weld .feat p{color:var(--muted);font-size:15px}
+.weld .feat h4{font-size:18px;margin:14px 0 6px}
+.weld .ic{width:44px;height:44px;border-radius:12px;background:rgba(163,224,95,.1);color:var(--lime);display:grid;place-items:center;font-size:20px}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.contact .box{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:44px}
+.contact form{display:grid;gap:12px;margin-top:26px}
+.contact .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.contact input,.contact textarea{background:var(--bg);border:1px solid var(--line);color:#fff;padding:16px 18px;border-radius:12px;font:inherit;width:100%}
+.contact input:focus,.contact textarea:focus{outline:2px solid var(--blue)}
+.clist{display:grid;gap:16px;align-content:start}
+.clist a,.clist div{display:flex;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;transition:.2s}
+.clist a:hover{border-color:var(--lime)}
+.clist .ic{width:52px;height:52px;flex:none;border-radius:14px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:20px}
+.clist b{font-size:18px;display:block;overflow-wrap:anywhere}
+.clist a>div,.clist div>div{min-width:0}
+
+footer{border-top:1px solid var(--line);padding:40px 0;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+.wa{position:fixed;right:20px;bottom:20px;z-index:70;width:60px;height:60px;border-radius:50%;background:#25d366;display:grid;place-items:center;box-shadow:0 10px 30px rgba(37,211,102,.4);transition:.2s}
+.wa:hover{transform:scale(1.08)}
+
+.fx{opacity:0;transform:translateY(26px);transition:.7s cubic-bezier(.2,.7,.2,1)}
+.fx.in{opacity:1;transform:none}
+
+@media(max-width:1024px){
+  .hd nav{display:none}
+  .hd nav.open{display:flex;position:absolute;top:78px;left:0;right:0;flex-direction:column;background:var(--bg2);padding:20px 16px;border-bottom:1px solid var(--line)}
+  .ham{display:block}
+  .hero .wrap,.calc,.weld,.contact{grid-template-columns:minmax(0,1fr)}
+  .contact>*,.calc>*,.weld>*,.hero .wrap>*{min-width:0}
+  .grid{grid-template-columns:repeat(3,1fr)}
+  .nums{grid-template-columns:repeat(2,1fr)}
+  .nums div:nth-child(2){border-right:0}
+  .nums div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+}
+@media(max-width:680px){
+  .hd .r .btn{display:none}
+  section.s{padding:72px 0}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .calc .box,.contact .box{padding:26px}
+  .weld .feat{grid-template-columns:1fr}
+  .weld .feat .main{grid-column:auto}
+  .contact .two{grid-template-columns:1fr}
+  .nums b{font-size:38px}
+  .nums div{padding:24px 18px}
+  .panel .rows b{font-size:14px}
+  .panel .rows div{padding:10px}
+  .panel .rows .mono{font-size:10px}
+  .panel{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<header id="hd">
+  <div class="wrap hd">
+    <a href="#" class="logo">
+      <svg width="40" height="34" viewBox="0 0 48 40"><path d="M21 1 6 39h8.5L27.5 6z" fill="#2196f3"/><path d="M30 9 19 39h8.5l7-18.5z" fill="#2196f3"/><path d="M37 25l7 14H30z" fill="#8bc34a"/></svg>
+      <span>GLOBAL<small>PROCUREMENT</small></span>
+    </a>
+    <nav id="nav">
+      <a href="#katalog">Kataloq</a>
+      <a href="#kalkulyator">OSB kalkulyator</a>
+      <a href="#welder">WELDER</a>
+      <a href="#elaqe">Əlaqə</a>
+    </nav>
+    <div class="r">
+      <span class="mono">AZ · RU</span>
+      <a href="tel:+994513040043" class="btn btn-out">+994 51 304 00 43</a>
+      <button class="ham" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap">
+    <div>
+      <span class="status"><b>Rəsmi</b> Kronospan · Polinor · ISOMAX RUS · WELDER</span>
+      <h1>Möhkəm <span class="o">karkas.</span><br>Etibarlı <span class="l">izolyasiya.</span></h1>
+      <p>Global Procurement Group MMC — OSB-3 lövhələri, fasad, hidro və termo izolyasiya materiallarını birbaşa zavoddan idxal edir. Topdan və pərakəndə satış, Bakı.</p>
+      <div class="acts">
+        <a href="#katalog" class="btn btn-lime">Kataloqa keç →</a>
+        <a href="#kalkulyator" class="btn btn-out">OSB hesabla</a>
+      </div>
+    </div>
+    <div class="panel fx">
+      <span class="tagline">Ən çox satılan</span>
+      <div class="imgbox"><img src="assets/img/osb.jpg" alt="OSB-3 Kronospan"></div>
+      <div class="rows">
+        <div><span class="mono">Sinif</span><b>OSB-3</b></div>
+        <div><span class="mono">Ölçü</span><b>1220×2440</b></div>
+        <div><span class="mono">Qalınlıq</span><b>9–18 mm</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ticker"><div class="t">
+  <span>KRONOSPAN</span><span>TECHNONICOL</span><span>POLYNOR</span><span>ISOMAX RUS</span><span>WELDER</span><span>PENOPLEX</span><span>SOFIT</span><span>THERMO PLUS</span>
+  <span>KRONOSPAN</span><span>TECHNONICOL</span><span>POLYNOR</span><span>ISOMAX RUS</span><span>WELDER</span><span>PENOPLEX</span><span>SOFIT</span><span>THERMO PLUS</span>
+</div></div>
+
+<section class="s" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="nums fx">
+      <div><span class="mono">Brendlər</span><b>5<em>+</em></b><p>rəsmi distribyutorluq</p></div>
+      <div><span class="mono">Çeşid</span><b>25<em>+</em></b><p>məhsul anbarda</p></div>
+      <div><span class="mono">Kateqoriya</span><b>7</b><p>karkasdan fasada</p></div>
+      <div><span class="mono">Zəmanət</span><b>1<em> il</em></b><p>WELDER avadanlığına</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="katalog">
+  <div class="wrap">
+    <div class="head fx">
+      <div><span class="mono">// Kataloq</span><h2>Məhsullar</h2></div>
+      <p>Kateqoriya seçin — kartlar dərhal filtrlənir. Hər məhsul üçün qiyməti telefonla və ya formla soruşun.</p>
+    </div>
+    <div class="tabs fx" id="tabs">
+      <button class="on" data-f="all">Hamısı<sup>12</sup></button>
+      <button data-f="osb">OSB<sup>1</sup></button>
+      <button data-f="termo">Termo<sup>4</sup></button>
+      <button data-f="hidro">Hidro<sup>2</sup></button>
+      <button data-f="fasad">Fasad<sup>3</sup></button>
+      <button data-f="membran">Membranlar<sup>1</sup></button>
+      <button data-f="welder">WELDER<sup>1</sup></button>
+    </div>
+    <div class="grid" id="grid">
+      <a href="#" class="item" data-c="osb"><div class="ph"><img src="assets/img/osb.jpg" alt=""></div><div class="tx"><span class="mono">Kronospan</span><h4>OSB-3 lövhə 9 / 12 / 15 / 18 mm</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="termo"><div class="ph"><img src="assets/img/thermo-plus.webp" alt=""></div><div class="tx"><span class="mono">Thermo Plus</span><h4>Thermo Plus daş yunu</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="fasad"><div class="ph"><img src="assets/img/thermo-vent.webp" alt=""></div><div class="tx"><span class="mono">Thermo Plus</span><h4>Vent fasad daş yunu</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="termo"><div class="ph"><img src="assets/img/texnonikol-mineral.jpg" alt=""></div><div class="tx"><span class="mono">Technonicol</span><h4>Mineral izolyasiya</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="termo"><div class="ph"><img src="assets/img/polynor.webp" alt=""></div><div class="tx"><span class="mono">Polynor</span><h4>Püskürtmə izolyasiya 3D</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="termo"><div class="ph"><img src="assets/img/penoplex.webp" alt=""></div><div class="tx"><span class="mono">Penoplex</span><h4>XPS lövhələr</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="hidro"><div class="ph"><img src="assets/img/pvc-logicbase.webp" alt=""></div><div class="tx"><span class="mono">Technonicol</span><h4>PVC membran Logicbase</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="hidro"><div class="ph"><img src="assets/img/bitum.webp" alt=""></div><div class="tx"><span class="mono">Technonicol</span><h4>Bitum Praymer 18 LT</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="fasad"><div class="ph"><img src="assets/img/fasad-setka.webp" alt=""></div><div class="tx"><span class="mono">ISOMAX</span><h4>Fasad setkası 160 gr</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="fasad"><div class="ph"><img src="assets/img/dubel.webp" alt=""></div><div class="tx"><span class="mono">ISOMAX</span><h4>Fasad izolyasiya dübeli</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="membran"><div class="ph"><img src="assets/img/sofit-a70.jpg" alt=""></div><div class="tx"><span class="mono">SOFIT</span><h4>Su və külək membranı A70</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+      <a href="#" class="item" data-c="welder"><div class="ph"><img src="assets/img/welder-fen.jpg" alt=""></div><div class="tx"><span class="mono">WELDER</span><h4>Peşəkar əl qaynaq feni</h4><span class="ft">Qiymət soruş <span>→</span></span></div></a>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="kalkulyator" style="padding-top:0">
+  <div class="wrap">
+    <div class="head fx"><div><span class="mono">// Alət</span><h2>OSB kalkulyatoru</h2></div><p>Sahəni daxil edin — neçə lövhə lazım olduğunu ehtiyat faizi ilə hesablayaq.</p></div>
+    <div class="calc fx">
+      <div class="box">
+        <span class="mono">Parametrlər</span>
+        <label for="area">Sahə, m²</label>
+        <input type="number" id="area" value="60" min="1">
+        <label>Qalınlıq</label>
+        <div class="seg" id="seg"><button data-t="9" class="on">9 mm</button><button data-t="12">12 mm</button><button data-t="15">15 mm</button><button data-t="18">18 mm</button></div>
+        <label for="res">Kəsim ehtiyatı: <b id="resv">10%</b></label>
+        <input type="range" class="range" id="res" min="0" max="20" value="10">
+      </div>
+      <div class="box result">
+        <div><span class="mono">Nəticə</span><div class="big" id="sheets">23<small>lövhə</small></div></div>
+        <ul>
+          <li>Bir lövhənin sahəsi <b>2.977 m²</b></li>
+          <li>Ümumi örtük sahəsi <b id="cov">68.5 m²</b></li>
+          <li>Qalınlıq <b id="th">9 mm</b></li>
+        </ul>
+        <a href="#elaqe" class="btn btn-lime" id="ask" style="justify-content:center">Bu həcm üçün qiymət al →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="welder" style="padding-top:0">
+  <div class="wrap">
+    <div class="weld">
+      <div class="img fx"><img src="assets/img/welder-fen.jpg" alt="WELDER qaynaq feni"></div>
+      <div class="feat">
+        <div class="main fx"><span class="mono">// WELDER rəsmi tərəfdaşı</span><h3>PVC, HDPE, LDPE membranlar üçün qaynaq avadanlıqları</h3><p>Avtomatik aparatlar, isti hava fenləri, tikiş keyfiyyətinə nəzarət alətləri və aksesuarlar — dam örtükləri, fundament, tunel və rezervuarlar üçün.</p></div>
+        <div class="fx"><span class="ic">✓</span><h4>1 il zəmanət</h4><p>Bütün avadanlıqlara rəsmi zəmanət.</p></div>
+        <div class="fx"><span class="ic">⚙</span><h4>Servis Bakıda</h4><p>Peşəkar servis və texniki dəstək.</p></div>
+        <div class="fx"><span class="ic">?</span><h4>Məsləhət</h4><p>Avadanlıq seçimi və istifadə təlimi.</p></div>
+        <div class="fx"><span class="ic">★</span><h4>Orijinal</h4><p>Yalnız sertifikatlı məhsullar.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="elaqe" style="padding-top:0">
+  <div class="wrap">
+    <div class="head fx"><div><span class="mono">// Əlaqə</span><h2>Sorğu göndərin</h2></div></div>
+    <div class="contact">
+      <div class="box fx">
+        <span class="mono">Kommersiya təklifi</span>
+        <form onsubmit="event.preventDefault();this.querySelector('button').textContent='✓ Sorğu göndərildi'">
+          <div class="two"><input placeholder="Ad, soyad" required><input type="tel" placeholder="Telefon" required></div>
+          <input placeholder="Şirkət (istəyə görə)">
+          <textarea rows="5" id="msg" placeholder="Hansı məhsul və hansı həcmdə lazımdır?"></textarea>
+          <button class="btn btn-lime" style="justify-content:center">Göndər →</button>
+        </form>
+      </div>
+      <div class="clist">
+        <a href="tel:+994513040043" class="fx"><span class="ic">☎</span><div><span class="mono">Telefon</span><b>+994 51 304 00 43</b></div></a>
+        <a href="https://wa.me/994513040043" class="fx"><span class="ic">💬</span><div><span class="mono">WhatsApp</span><b>Mesaj yazın</b></div></a>
+        <a href="mailto:ceo@globalprocurement.az" class="fx"><span class="ic">@</span><div><span class="mono">E-poçt</span><b>ceo@globalprocurement.az</b></div></a>
+        <div class="fx"><span class="ic">⌖</span><div><span class="mono">Anbar</span><b>Dərnəgül, Baksol yolu</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© 2026 Global Procurement Group MMC</span><span class="mono">Bakı · Azərbaycan</span></div></footer>
+
+<a class="wa" href="https://wa.me/994513040043" aria-label="WhatsApp"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.7-.1 1.3z"/></svg></a>
+
+<script>
+const hd=document.getElementById('hd');
+addEventListener('scroll',()=>hd.classList.toggle('solid',scrollY>30));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.fx').forEach(el=>io.observe(el));
+
+// catalog filter
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  const f=b.dataset.f;
+  document.querySelectorAll('#grid .item').forEach(i=>i.classList.toggle('hide',f!=='all'&&i.dataset.c!==f));
+});
+
+// OSB calculator (1.22 × 2.44 = 2.9768 m²)
+const SHEET=1.22*2.44;let t=9;
+const area=document.getElementById('area'),res=document.getElementById('res');
+function calc(){
+  const a=Math.max(0,+area.value||0),r=+res.value;
+  const n=Math.ceil(a*(1+r/100)/SHEET);
+  document.getElementById('resv').textContent=r+'%';
+  document.getElementById('sheets').innerHTML=n+'<small>lövhə</small>';
+  document.getElementById('cov').textContent=(n*SHEET).toFixed(1)+' m²';
+  document.getElementById('th').textContent=t+' mm';
+  document.getElementById('ask').onclick=()=>{document.getElementById('msg').value=`OSB-3 Kronospan ${t} mm — ${n} ədəd (${a} m²)`};
+}
+area.oninput=res.oninput=calc;
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#seg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');t=+b.dataset.t;calc();
+});
+calc();
+</script>
+</body>
+</html>

@@ -59,6 +59,8 @@ return [
     'product.price_request' => 'Qiymət sorğu ilə', 'product.price_note' => 'Topdan alışa xüsusi qiymət',
     'product.request_tab' => 'Qiymət sorğusu', 'product.request_text' => 'Formu doldurun — bu məhsul üzrə kommersiya təklifi göndərəcəyik.',
 
+    'badge.yeni' => 'Yeni', 'badge.zəmanət' => 'Zəmanət', 'badge.bestseller' => 'Bestseller', 'badge.endirim' => 'Endirim',
+
     '404.title' => 'Səhifə tapılmadı', '404.text' => 'Axtardığınız səhifə silinib və ya ünvan dəyişib.',
 
     'mail.new' => 'Saytdan yeni sorğu — globalprocurement.az', 'mail.subject' => 'Saytdan sorğu', 'mail.topic' => 'Mövzu',

@@ -59,6 +59,8 @@ return [
     'product.price_request' => 'Цена по запросу', 'product.price_note' => 'Специальные цены на опт',
     'product.request_tab' => 'Запрос цены', 'product.request_text' => 'Заполните форму — пришлём коммерческое предложение по этому товару.',
 
+    'badge.yeni' => 'Новинка', 'badge.zəmanət' => 'Гарантия', 'badge.bestseller' => 'Хит продаж', 'badge.endirim' => 'Скидка',
+
     '404.title' => 'Страница не найдена', '404.text' => 'Страница удалена или её адрес изменился.',
 
     'mail.new' => 'Новый запрос с сайта — globalprocurement.az', 'mail.subject' => 'Запрос с сайта', 'mail.topic' => 'Тема',

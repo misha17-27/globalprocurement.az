@@ -8,6 +8,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/seed.php';
+require __DIR__ . '/content-pack.php';
 
 header('Content-Type: text/html; charset=utf-8');
 $token = (string)cfg('install_token', '');
@@ -19,6 +20,7 @@ if ($token === '' || $token === 'CHANGE_ME_TOKEN' || !hash_equals($token, (strin
 $db = pdo();
 $tables = cms_create_tables($db);
 $seed = cms_seed($db);
+$pack = cms_apply_pack($db);
 
 $email = (string)cfg('install_admin_email', 'admin@globalprocurement.az');
 $pass  = (string)cfg('install_admin_pass', '');
@@ -35,6 +37,7 @@ echo '<meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;max-wid
 echo '<h2>✓ Quraşdırma tamamlandı</h2>';
 echo '<p>Cədvəllər: ' . e(implode(', ', $tables)) . '</p>';
 echo '<p>Əlavə olundu — parametrlər: ' . $seed['settings'] . ', mətnlər: ' . $seed['texts'] . ', kateqoriyalar: ' . $seed['categories'] . ', məhsullar: ' . $seed['products'] . '</p>';
+echo '<p>SEO və RU tərcümələr: məhsul ' . $pack['products'] . ', kateqoriya ' . $pack['categories'] . ', səhifə ' . $pack['pages'] . '</p>';
 echo $made ? '<p>Admin hesabı yaradıldı: <code>' . e($email) . '</code></p>' : '<p>Admin hesabı artıq var.</p>';
 echo '<p><a href="index.php">→ Panelə daxil olun</a>, sonra <b>Импорт из WordPress</b> bölməsindən məhsulları köhnə saytdan gətirin.</p>';
 echo '<p style="color:#b91c1c"><b>Vacib:</b> <code>admin/install.php</code> faylını serverdən silin.</p>';

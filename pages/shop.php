@@ -37,7 +37,7 @@ site_header('shop');
   <div class="wrap">
     <nav class="crumbs" aria-label="breadcrumb"><a href="<?= e(url('')) ?>"><?= e(t('nav.home')) ?></a><span><a href="<?= e(url('shop')) ?>"><?= e(t('nav.catalog')) ?></a></span><?php if ($cat): ?><span><?= e($cat['name']) ?></span><?php endif; ?></nav>
     <h1><?= e($title) ?></h1>
-    <?php if ($cat && trim((string)$cat['descr']) !== ''): ?><p><?= e(strip_tags((string)$cat['descr'])) ?></p>
+    <?php if ($cat && trim((string)$cat['descr']) !== ''): ?><p><?= e(preg_split('/\R\s*\R/u', trim(strip_tags((string)$cat['descr'])))[0]) ?></p>
     <?php elseif (!$cat): ?><p><?= e(text('seo_shop_desc')) ?></p><?php endif; ?>
   </div>
 </section>
@@ -74,6 +74,10 @@ site_header('shop');
         <?php foreach ($list as $i => $p) echo product_card($p, $i); ?>
         <?php if (!$list): ?><div class="empty"><?= e(t('search.none')) ?><br><br><a class="btn btn-white" href="<?= e(url('shop')) ?>"><?= e(t('btn.all_products')) ?></a></div><?php endif; ?>
       </div>
+      <?php $paras = $cat ? array_slice(preg_split('/\R\s*\R/u', trim(strip_tags((string)$cat['descr']))), 1) : [];
+      if ($paras && $q === '' && $brand === ''): ?>
+        <div class="prose" style="margin-top:50px;padding-top:34px;border-top:1px solid var(--line)"><?php foreach ($paras as $para): ?><p><?= nl2br(e(trim($para))) ?></p><?php endforeach; ?></div>
+      <?php endif; ?>
     </div>
   </div>
 </section>

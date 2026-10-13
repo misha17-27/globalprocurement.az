@@ -19,6 +19,7 @@ $_SERVER['DOCUMENT_ROOT'] = dirname(__DIR__);
 require __DIR__ . '/../admin/lib.php';
 require __DIR__ . '/../admin/seed.php';
 require __DIR__ . '/../admin/import.php';
+require __DIR__ . '/../admin/content-pack.php';
 
 $db = pdo();
 cms_create_tables($db);
@@ -28,3 +29,4 @@ echo 'Seed: ' . json_encode($seed) . "\n";
 $imp = new WpImport($db, 'https://globalprocurement.az', !in_array('--keep', $argv, true), $dir);
 $imp->run();
 echo implode("\n", $imp->log) . "\n";
+echo 'Paket (SEO + RU): ' . json_encode(cms_apply_pack($db)) . "\n";

@@ -270,7 +270,10 @@ final class WpImport
             return;
         }
         $set = [];
-        foreach ($f as $k => $v) if ($v !== '' && ($this->overwrite || trim((string)$row[$k]) === '')) $set[$k] = $v;
+        foreach ($f as $k => $v) {
+            $seo = in_array($k, ['meta_title', 'meta_desc'], true);
+            if ($v !== '' && ((!$seo && $this->overwrite) || trim((string)$row[$k]) === '')) $set[$k] = $v;
+        }
         if (!$set) return;
         $sql = implode(', ', array_map(function ($k) { return "`$k` = ?"; }, array_keys($set)));
         $this->db->prepare("UPDATE page_i18n SET $sql WHERE page_id = ? AND lang = ?")->execute([...array_values($set), $pid, $lang]);
@@ -319,7 +322,9 @@ final class WpImport
             $hasImg = $n instanceof DOMElement && ($n->tagName === 'img' || $n->getElementsByTagName('img')->length > 0);
             if ($text !== '' && mb_strlen($text) < 3 && !$hasImg) continue;           // "r." kimi qırıntılar
             $share = self::cyrShare($text);
-            if ($n instanceof DOMElement && $n->hasChildNodes() && $share > 0.15 && $share < 0.85 && mb_strlen($text) > 80) {
+            /* yalnız konteynerlər bölünür; abzas və başlıq bütöv qalır (çoxluğa görə) */
+            $container = $n instanceof DOMElement && in_array(strtolower($n->tagName), ['div', 'ul', 'ol', 'li', 'section', 'article', 'blockquote', 'table', 'tbody'], true);
+            if ($container && $n->hasChildNodes() && $share > 0.15 && $share < 0.85 && mb_strlen($text) > 80) {
                 [$a, $r] = self::splitNode($doc, $n, $last);
                 $open = '<' . $n->tagName . '>'; $close = '</' . $n->tagName . '>';
                 if (trim(strip_tags($a, '<img>')) !== '') $az .= $open . $a . $close;
@@ -365,7 +370,10 @@ final class WpImport
                     ->execute([$slug, $img, 50 + count($map), (int)$c['id']]);
                 $id = (int)$this->db->lastInsertId();
             }
-            $this->upsertCatI18n($id, 'az', $name, trim(strip_tags(html_entity_decode((string)($c['description'] ?? '')))));
+            [$dAz, $dRu] = self::splitLang(sanitize_html(self::stripSpam(self::autop(html_entity_decode((string)($c['description'] ?? ''))), true)));
+            $plain = function ($h) { return trim((string)preg_replace("/\n{3,}/", "\n\n", html_entity_decode(strip_tags(str_replace(['</p>', '</li>', '<br>'], "\n", $h)), ENT_QUOTES, 'UTF-8'))); };
+            $this->upsertCatI18n($id, 'az', $name, $plain($dAz));
+            if ($dRu !== '') $this->upsertCatI18n($id, 'ru', '', $plain($dRu));
             $map[(int)$c['id']] = $id;
             $this->stat['cats']++;
             $this->say("Kateqoriya: $name");
@@ -381,8 +389,9 @@ final class WpImport
     {
         $st = $this->db->prepare('SELECT name, descr FROM category_i18n WHERE category_id = ? AND lang = ?'); $st->execute([$id, $lang]);
         if ($r = $st->fetch()) {
+            /* ad yenilənir; təsvir yalnız boşdursa (paneldəki / paketdəki mətn qorunur) */
             $this->db->prepare('UPDATE category_i18n SET name = ?, descr = ? WHERE category_id = ? AND lang = ?')
-                ->execute([$this->overwrite || $r['name'] === '' ? $name : $r['name'], ($this->overwrite && $descr !== '') || (string)$r['descr'] === '' ? $descr : $r['descr'], $id, $lang]);
+                ->execute([($this->overwrite && $name !== '') || $r['name'] === '' ? ($name !== '' ? $name : $r['name']) : $r['name'], trim((string)$r['descr']) === '' ? $descr : $r['descr'], $id, $lang]);
         } else {
             $this->db->prepare('INSERT INTO category_i18n (category_id, lang, name, descr, meta_title, meta_desc) VALUES (?,?,?,?,\'\',\'\')')->execute([$id, $lang, $name, $descr]);
         }
@@ -491,7 +500,8 @@ final class WpImport
         $set = [];
         foreach ($f as $k => $v) {
             if ($v === '') continue;                                         // boş dəyər mövcud mətni silmir
-            if (($force && $this->overwrite) || trim((string)$row[$k]) === '') $set[$k] = $v;
+            $seo = in_array($k, ['meta_title', 'meta_desc'], true);          // SEO (paket / panel) üzərinə yazılmır
+            if ((!$seo && $force && $this->overwrite) || trim((string)$row[$k]) === '') $set[$k] = $v;
         }
         if (!$set) return;
         $sql = implode(', ', array_map(function ($k) { return "`$k` = ?"; }, array_keys($set)));

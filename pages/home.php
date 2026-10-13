@@ -83,7 +83,7 @@ site_header('');
     <div class="sh reveal"><div><span class="label"><?= e(t('label.categories')) ?></span><h2><?= e(text('cats_title')) ?></h2></div><p><?= e(text('cats_lead')) ?></p></div>
     <div class="cats">
       <?php foreach ($cats as $c): ?>
-        <a href="<?= e(url('product-category/' . $c['slug'])) ?>" class="cat reveal"><div class="ci"><img src="<?= e(img($c['image'])) ?>" alt="" loading="lazy"></div><b><?= e($c['name']) ?></b><span><?= (int)$c['cnt'] ?> <?= e(t('label.items')) ?></span></a>
+        <a href="<?= e(url('product-category/' . $c['slug'])) ?>" class="cat reveal"><div class="ci"><img src="<?= e(img($c['image'])) ?>" alt="" loading="lazy"></div><b><?= e($c['name']) ?></b><span><?= e(items_label((int)$c['cnt'])) ?></span></a>
       <?php endforeach; ?>
     </div>
   </div>

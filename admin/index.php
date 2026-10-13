@@ -235,6 +235,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 
     /* ---------- SEO ---------- */
+    if ($section === 'seo' && $act === 'pack') {
+        require_once __DIR__ . '/content-pack.php';
+        $n = cms_apply_pack($db);
+        flash(sprintf('Пакет применён: товаров %d, категорий %d, страниц %d. SEO обновлено, пустые RU-тексты заполнены.', $n['products'], $n['categories'], $n['pages']));
+        redirect('index.php?section=seo');
+    }
     if ($section === 'seo') {
         if ($act === 'save') {
             foreach (SEO_PAGES as $k => $_) {
@@ -272,7 +278,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if (!preg_match('~^https?://[^\s/$.?#].[^\s]*$~i', $url)) { flash('Неверный адрес сайта.', 'err'); redirect('index.php?section=import'); }
         kv_set('wp_url', $url);
         $imp = new WpImport($db, $url, isset($_POST['overwrite']));
-        if ($act === 'test') $imp->test(); else $imp->run();
+        if ($act === 'test') $imp->test(); else { $imp->run(); require_once __DIR__ . '/content-pack.php'; cms_apply_pack($db); }
         $_SESSION['import_log'] = $imp->log;
         flash($act === 'test' ? 'Проверка завершена — см. журнал.' : sprintf('Импорт завершён: товаров %d, категорий %d, картинок %d, ошибок %d.', $imp->stat['products'], $imp->stat['cats'], $imp->stat['images'], $imp->stat['errors']), $imp->stat['errors'] ? 'err' : 'ok');
         redirect('index.php?section=import');
@@ -391,7 +397,10 @@ elseif ($section === 'products') {
         if ($q !== '') { $w[] = '(LOWER(a.title) LIKE ? OR p.slug LIKE ? OR LOWER(p.brand) LIKE ?)'; $ql = '%' . mb_strtolower($q) . '%'; array_push($args, $ql, $ql, $ql); }
         if ($fc) { $w[] = 'p.id IN (SELECT product_id FROM product_category WHERE category_id = ?)'; $args[] = $fc; }
         $st = $db->prepare("SELECT p.*, a.title, (SELECT b.title FROM product_i18n b WHERE b.product_id = p.id AND b.lang = 'ru') title_ru,
-              (SELECT LENGTH(b.body) FROM product_i18n b WHERE b.product_id = p.id AND b.lang = 'az') body_len
+              (SELECT LENGTH(b.body) FROM product_i18n b WHERE b.product_id = p.id AND b.lang = 'az') body_len,
+              a.meta_title mt_az, a.meta_desc md_az,
+              (SELECT b.meta_title FROM product_i18n b WHERE b.product_id = p.id AND b.lang = 'ru') mt_ru,
+              (SELECT b.meta_desc FROM product_i18n b WHERE b.product_id = p.id AND b.lang = 'ru') md_ru
             FROM products p LEFT JOIN product_i18n a ON a.product_id = p.id AND a.lang = 'az' WHERE " . implode(' AND ', $w) . ' ORDER BY p.sort, p.id');
         $st->execute($args); $rows = $st->fetchAll();
         $pc = [];
@@ -404,12 +413,13 @@ elseif ($section === 'products') {
         foreach ($catList() as $c) echo '<option value="' . $c['id'] . '"' . ($fc === (int)$c['id'] ? ' selected' : '') . '>' . e($c['name']) . ' (' . $c['cnt'] . ')</option>';
         echo '</select><button class="btn ghost">Фильтр</button><span style="flex:1"></span><a class="btn" href="index.php?section=products&new=1">+ Добавить товар</a></form>';
         echo '<div class="muted" style="margin-bottom:8px">Найдено: ' . count($rows) . '. ★ — показывается на главной.</div>';
-        echo '<div class="tablewrap"><table><tr><th></th><th>Название</th><th>Бренд</th><th>Категории</th><th>Описание</th><th>Сайт</th><th></th></tr>';
+        echo '<div class="tablewrap"><table><tr><th></th><th>Название</th><th>Бренд</th><th>Категории</th><th>Описание</th><th title="SEO title + description: AZ, RU">SEO</th><th>Сайт</th><th></th></tr>';
         foreach ($rows as $r) {
             echo '<tr><td><img class="thumb" src="' . e($siteUrl('assets/img/' . ($r['image'] ?: 'placeholder.svg'))) . '" alt=""></td>';
             echo '<td><b>' . e($r['title'] ?: $r['slug']) . '</b><br><span class="muted">' . e($r['title_ru'] ?: '— RU нет') . '</span></td>';
             echo '<td>' . e($r['brand']) . '</td><td class="muted">' . e(implode(', ', $pc[$r['id']] ?? [])) . '</td>';
             echo '<td>' . ((int)$r['body_len'] > 0 ? '<span class="pill g">есть</span>' : '<span class="pill gr">нет</span>') . '</td>';
+            echo '<td style="white-space:nowrap">' . seo_dot((string)$r['mt_az'], (string)$r['md_az'], 'AZ') . seo_dot((string)$r['mt_ru'], (string)$r['md_ru'], 'RU') . '</td>';
             echo '<td style="white-space:nowrap">';
             foreach (['visible' => ['👁', 'Показ на сайте'], 'featured' => ['★', 'На главной']] as $col => [$ic, $tl]) {
                 echo '<form method="post" style="display:inline">' . csrf_field() . '<input type="hidden" name="action" value="toggle"><input type="hidden" name="col" value="' . $col . '"><input type="hidden" name="id" value="' . $r['id'] . '"><input type="hidden" name="qs" value="' . e($qs) . '">'
@@ -444,8 +454,8 @@ elseif ($section === 'products') {
             echo '<label>Полное описание (HTML)</label><textarea class="code" name="tr[' . $lc . '][body]">' . $g($lc, 'body') . '</textarea>';
             echo '<p class="muted">Разрешены теги: &lt;p&gt; &lt;h2&gt; &lt;h3&gt; &lt;ul&gt; &lt;li&gt; &lt;strong&gt; &lt;a&gt; &lt;img&gt; &lt;table&gt;. Скрипты и стили удаляются автоматически.</p>';
             echo '<label>Характеристики</label><textarea name="tr[' . $lc . '][specs]" placeholder="Толщина: 9 мм">' . $g($lc, 'specs') . '</textarea><p class="muted">Каждая строка: <code>Название: Значение</code></p>';
-            echo '<div class="row"><div><label>SEO Title</label><input type="text" name="tr[' . $lc . '][meta_title]" value="' . $g($lc, 'meta_title') . '"></div>';
-            echo '<div><label>Meta Description</label><input type="text" name="tr[' . $lc . '][meta_desc]" value="' . $g($lc, 'meta_desc') . '"></div></div></div>';
+            echo '<label>SEO Title <span class="muted" data-len-for="mt' . $lc . '"></span></label><input type="text" id="mt' . $lc . '" data-len="30-65" name="tr[' . $lc . '][meta_title]" value="' . $g($lc, 'meta_title') . '">';
+            echo '<label>Meta Description <span class="muted" data-len-for="md' . $lc . '"></span></label><textarea id="md' . $lc . '" data-len="70-165" name="tr[' . $lc . '][meta_desc]" style="min-height:70px">' . $g($lc, 'meta_desc') . '</textarea></div>';
         }
         echo '</div>';
 
@@ -629,6 +639,8 @@ elseif ($section === 'seo') {
         echo '<label>Meta description</label><textarea name="desc[' . $k . ']" style="min-height:70px">' . e(txt_get("seo_{$k}_desc", $L)) . '</textarea></div>';
     }
     echo '<button class="btn">Сохранить</button></form>';
+    echo '<form method="post" class="panel" data-confirm="Записать SEO title/description для всех товаров, категорий и страниц (AZ + RU)? Ваши ручные SEO-правки будут заменены.">' . csrf_field() . '<input type="hidden" name="action" value="pack">';
+    echo '<h3>Пакет SEO и русских переводов</h3><p class="muted">SEO title и description на AZ и RU для всех 21 товара, 7 категорий и 3 страниц + русские описания товаров (заполняются только пустые). Применяется автоматически при установке и после импорта.</p><button class="btn ghost">Применить пакет</button></form>';
     echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="save_ga"><h3>Google Analytics 4</h3>';
     echo '<label>Идентификатор потока</label><input type="text" name="ga_id" value="' . e(kv_get('ga_id')) . '" placeholder="G-XXXXXXXXXX"><div style="margin-top:12px"><button class="btn">Сохранить</button></div></form>';
 }

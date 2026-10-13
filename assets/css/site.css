@@ -452,15 +452,15 @@ ul.checks li::before{content:"\2713";position:absolute;left:0;top:1px;width:22px
 .drawer .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:16px}
 .drawer .db{flex:1;overflow:auto;padding:8px 22px 16px}
 .drawer .df{padding:18px 22px;border-top:1px solid var(--line);background:var(--soft)}
-.ci{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
-.ci img{width:64px;height:64px;object-fit:contain;border-radius:12px;background:var(--soft);padding:4px;mix-blend-mode:multiply}
-.ci b{display:block;font-size:14px;color:var(--ink);line-height:1.3}
-.ci small{color:var(--muted);font-size:12px}
-.ci .q{display:flex;align-items:center;gap:6px;margin-top:6px}
-.ci .q button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
-.ci .q input{width:52px;height:28px;border-radius:8px;border:1px solid var(--line);text-align:center;font:inherit;font-size:13px}
-.ci .rm{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;align-self:start}
-.ci .rm:hover{color:#c62828}
+.cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.cart-item img{width:64px;height:64px;object-fit:contain;border-radius:12px;background:var(--soft);padding:4px;mix-blend-mode:multiply}
+.cart-item b{display:block;font-size:14px;color:var(--ink);line-height:1.3}
+.cart-item small{color:var(--muted);font-size:12px}
+.cart-item .q{display:flex;align-items:center;gap:6px;margin-top:6px}
+.cart-item .q button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.cart-item .q input{width:52px;height:28px;border-radius:8px;border:1px solid var(--line);text-align:center;font:inherit;font-size:13px}
+.cart-item .rm{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;align-self:start}
+.cart-item .rm:hover{color:#c62828}
 .cempty{text-align:center;color:var(--muted);padding:50px 10px}
 .rform{display:grid;gap:10px}
 .rform input,.rform textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:14px;background:#fff;outline:none}

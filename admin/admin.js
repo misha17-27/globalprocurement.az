@@ -37,4 +37,14 @@
     document.querySelectorAll('[data-ltab^="' + grp + '"]').forEach(function (x) { x.classList.toggle('ghost', x !== b); });
     document.querySelectorAll('[data-lpane^="' + grp + '"]').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-lpane') === key); });
   });
+
+  // SEO sahələrində simvol sayğacı (data-len="min-max")
+  function lenTick(el) {
+    var out = document.querySelector('[data-len-for="' + el.id + '"]');
+    if (!out) return;
+    var r = el.getAttribute('data-len').split('-'), n = el.value.trim().length;
+    out.textContent = n + ' / ' + r[0] + '–' + r[1];
+    out.style.color = n === 0 ? '#94a3b8' : (n >= +r[0] && n <= +r[1] ? '#16a34a' : '#d97706');
+  }
+  document.querySelectorAll('[data-len]').forEach(function (el) { lenTick(el); el.addEventListener('input', function () { lenTick(el); }); });
 })();

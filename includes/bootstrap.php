@@ -120,6 +120,13 @@ function text(string $k, string $default = ''): string {
 }
 
 /* ---------------- mətn köməkçiləri ---------------- */
+/** "5 товаров" / "1 товар" / "3 товара" — RU üçün düzgün hal, AZ-da sadəcə "məhsul" */
+function items_label(int $n): string {
+    if (lang() !== 'ru') return $n . ' ' . t('label.items');
+    $m10 = $n % 10; $m100 = $n % 100;
+    $w = ($m10 === 1 && $m100 !== 11) ? 'товар' : (($m10 >= 2 && $m10 <= 4 && ($m100 < 12 || $m100 > 14)) ? 'товара' : 'товаров');
+    return $n . ' ' . $w;
+}
 function e($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 /** "a | b | c" sətirlərini massivə çevirir */

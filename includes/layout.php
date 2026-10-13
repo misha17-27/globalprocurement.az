@@ -102,12 +102,19 @@ function site_header(string $active = ''): void {
 <?php
 }
 
+/** Kartdakı nişanın tərcüməsi (paneldə AZ yazılır) */
+function badge_label(string $b): string {
+    $k = 'badge.' . mb_strtolower(trim($b));
+    $v = t($k);
+    return $v === $k ? $b : $v;
+}
+
 /** Məhsul kartı (kataloq və ana səhifə) */
 function product_card(array $p, int $i = 0): string {
     $u = url('product/' . $p['slug']);
     $data = e(json_encode(['id' => (int)$p['id'], 'slug' => $p['slug'], 't' => $p['title'], 'img' => img($p['image']), 'u' => $u], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     return '<article class="pc" style="animation-delay:' . ($i * 40) . 'ms">'
-        . '<a href="' . e($u) . '" class="im">' . ($p['badge'] !== '' ? '<span class="tg">' . e($p['badge']) . '</span>' : '')
+        . '<a href="' . e($u) . '" class="im">' . ($p['badge'] !== '' ? '<span class="tg">' . e(badge_label($p['badge'])) . '</span>' : '')
         . '<img src="' . e(img($p['image'])) . '" alt="' . e($p['title']) . '" loading="lazy"></a>'
         . '<div class="bd"><span class="br">' . e($p['brand']) . '</span>'
         . '<a href="' . e($u) . '" class="ttl"><h4>' . e($p['title']) . '</h4></a>'

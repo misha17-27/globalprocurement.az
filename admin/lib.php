@@ -237,6 +237,15 @@ function require_admin(): void {
     require_login();
     if (!is_admin()) { flash('Недостаточно прав (нужна роль Администратор).', 'err'); redirect('index.php?section=overview'); }
 }
+/** SEO göstəricisi: yaşıl — hər ikisi normal uzunluqda, narıncı — var amma uzunluq uyğun deyil, boz — yoxdur */
+function seo_dot(string $title, string $desc, string $label): string {
+    $tl = mb_strlen(trim($title)); $dl = mb_strlen(trim($desc));
+    if ($tl === 0 || $dl === 0) { $c = '#cbd5e1'; $tip = 'нет SEO'; }
+    elseif ($tl >= 30 && $tl <= 65 && $dl >= 70 && $dl <= 165) { $c = '#16a34a'; $tip = 'SEO в порядке'; }
+    else { $c = '#f59e0b'; $tip = "длина: title $tl, description $dl"; }
+    return '<span title="' . e($label . ': ' . $tip) . '" style="display:inline-block;width:11px;height:11px;border-radius:50%;background:' . $c . ';margin-right:5px"></span>';
+}
+
 function unread_count(): int {
     try { return (int)pdo()->query('SELECT COUNT(*) c FROM submissions WHERE is_read=0')->fetch()['c']; } catch (Throwable $e) { return 0; }
 }

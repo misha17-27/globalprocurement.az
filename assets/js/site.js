@@ -86,7 +86,7 @@
     if (!list) return;
     if (!cart.length) { list.innerHTML = '<div class="cempty">' + esc(T.empty) + '</div>'; return; }
     list.innerHTML = cart.map(function (it, i) {
-      return '<div class="ci"><img src="' + esc(it.img) + '" alt=""><div><a href="' + esc(it.u) + '"><b>' + esc(it.t) + '</b></a>'
+      return '<div class="cart-item"><img src="' + esc(it.img) + '" alt=""><div><a href="' + esc(it.u) + '"><b>' + esc(it.t) + '</b></a>'
         + (it.opt ? '<small>' + esc(T.opt) + ': ' + esc(it.opt) + '</small>' : '')
         + '<div class="q"><button type="button" data-ci="' + i + '" data-d="-1">−</button><input type="number" min="1" value="' + it.qty + '" data-ci="' + i + '" aria-label="' + esc(T.qty) + '"><button type="button" data-ci="' + i + '" data-d="1">+</button> <small>' + esc(T.pcs) + '</small></div></div>'
         + '<button type="button" class="rm" data-rm="' + i + '" aria-label="✕">✕</button></div>';

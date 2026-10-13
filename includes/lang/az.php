@@ -30,6 +30,7 @@ return [
     'form.open_wa' => 'WhatsApp-da göndər',
 
     'msg.needname' => 'Adınızı yazın.', 'msg.badphone' => 'Telefon nömrəsini düzgün yazın.', 'msg.bademail' => 'E-poçt ünvanı səhvdir.',
+    'msg.expired' => 'Forma köhnəlib — səhifəni yeniləyin və yenidən göndərin.', 'msg.captcha' => 'Robot olmadığınızı təsdiqləyin.',
     'msg.toomany' => 'Çox sayda sorğu. Bir az sonra yenidən cəhd edin və ya zəng edin.', 'msg.needname_phone' => 'Ad və telefon mütləqdir.',
 
     'footer.products' => 'Məhsullar', 'footer.company' => 'Şirkət', 'footer.contact' => 'Əlaqə', 'footer.rights' => 'Bütün hüquqlar qorunur',

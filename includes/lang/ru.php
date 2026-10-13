@@ -30,6 +30,7 @@ return [
     'form.open_wa' => 'Отправить в WhatsApp',
 
     'msg.needname' => 'Укажите имя.', 'msg.badphone' => 'Укажите корректный номер телефона.', 'msg.bademail' => 'Неверный e-mail.',
+    'msg.expired' => 'Форма устарела — обновите страницу и отправьте снова.', 'msg.captcha' => 'Подтвердите, что вы не робот.',
     'msg.toomany' => 'Слишком много запросов. Попробуйте позже или позвоните.', 'msg.needname_phone' => 'Имя и телефон обязательны.',
 
     'footer.products' => 'Товары', 'footer.company' => 'Компания', 'footer.contact' => 'Контакты', 'footer.rights' => 'Все права защищены',

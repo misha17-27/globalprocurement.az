@@ -145,10 +145,15 @@
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (r) {
         if (!r.ok || !r.j.ok) throw new Error(r.j.error || T.err);
-        form.reset(); onOk && onOk(); openDone(r.j.wa);
+        var stamp = form.querySelector('[name=stamp]'), sv = stamp ? stamp.value : '';
+        form.reset(); if (stamp) stamp.value = sv; onOk && onOk(); openDone(r.j.wa);
       })
       .catch(function (e) { showErr(errBox, e.message || T.err); })
-      .then(function () { btn.disabled = false; btn.textContent = label; });
+      .then(function () {
+        btn.disabled = false; btn.textContent = label;
+        var ts = form.querySelector('.cf-turnstile');
+        if (ts && window.turnstile) { try { window.turnstile.reset(ts); } catch (x) {} }
+      });
   };
   var showErr = function (box, msg) { if (!box) return; box.textContent = msg; box.hidden = !msg; };
 

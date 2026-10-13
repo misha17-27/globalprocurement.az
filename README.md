@@ -76,6 +76,23 @@ Köhnə WordPress ünvanları 301 ilə yönləndirilir: `/contact-us/ → /elaqe
 | Безопасность | Cloudflare Turnstile (girişdə kapça) |
 | Пользователи / Мой профиль | hesablar və parollar |
 
+## Təhlükəsizlik
+
+| Sahə | Müdafiə |
+|---|---|
+| Sorğu formaları (`/api/request`) | yalnız JSON ≤ 32 KB; mənşə yoxlaması (Origin/Referer); bot tələsi (gizli sahə); imzalı vaxt möhürü — forma ≥ 3 san. əvvəl açılmalı, ≤ 24 saat; saatda 6 sorğu / sessiya və 15 / IP; Cloudflare Turnstile (admin → Безопасность); məhsul adları yalnız bazadan |
+| Real IP | `CF-Connecting-IP` yalnız Cloudflare diapazonlarından gələn sorğuda qəbul olunur (`includes/security.php`) |
+| Admin girişi | CSRF; sessiyada 6 cəhd; IP üzrə 10 cəhd / 15 dəq. (bazada — cookie silməklə yayınmaq olmur); Turnstile; sessiya 2 saat boşdayanma / 12 saat; `SameSite=Strict`, `HttpOnly`, `Secure` |
+| Admin əməliyyatları | hər POST-da CSRF; rol yoxlaması (Администратор / Редактор); bütün çıxış `htmlspecialchars` |
+| HTML məzmun | təsvir və səhifələr ağ siyahı ilə təmizlənir: script, style, iframe, on* atributları, `javascript:` linkləri silinir |
+| Yükləmələr | yalnız şəkil (uzantı + MIME + `getimagesize`), ≤ 15 MB, təsadüfi ad; `assets/`-də PHP icrası bağlıdır |
+| HTTP başlıqları | CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS (HTTPS-də) — PHP-dən göndərilir |
+| Fayllar | `admin/config.php`, baza, loglar, `includes/`, `pages/`, `storage/`, gizli fayllar brauzerdən bağlıdır; `install.php` quraşdırmadan sonra bağlanır |
+| Xətalar | ziyarətçiyə göstərilmir → `storage/php-errors.log` |
+| Host başlığı | canonical / OG / e-poçt yalnız icazəli domenlə (`ALLOWED_HOSTS`) |
+
+Tövsiyə: Cloudflare-də SSL rejimi **Full (strict)** + cPanel-də AutoSSL; Turnstile açarlarını admin → Безопасность-a yazın.
+
 ## Köhnə saytdan nə köçürülmədi
 
 * **3118 «blog» yazısı** — hamısı kazino/mərc spamıdır (sayt sındırılıb), şirkətə aid yazı yoxdur.

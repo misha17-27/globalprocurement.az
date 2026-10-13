@@ -18,6 +18,14 @@ if ($token === '' || $token === 'CHANGE_ME_TOKEN' || !hash_equals($token, (strin
 }
 
 $db = pdo();
+/* Quraşdırılıbsa — yalnız daxil olmuş administrator təkrar işə sala bilər */
+try {
+    $has = (int)$db->query('SELECT COUNT(*) c FROM admins')->fetch()['c'] > 0;
+} catch (Throwable $e) { $has = false; }
+if ($has && !is_admin()) {
+    http_response_code(403);
+    exit('Sayt artıq quraşdırılıb. Təkrar işə salmaq üçün əvvəlcə panelə administrator kimi daxil olun.');
+}
 $tables = cms_create_tables($db);
 $seed = cms_seed($db);
 $pack = cms_apply_pack($db);

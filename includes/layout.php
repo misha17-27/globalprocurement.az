@@ -44,6 +44,8 @@ function page_head(array $meta): void {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
+<?php if (ts_forms_on()): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<?php endif; ?>
 <?php if (!empty($meta['schema'])): ?><script type="application/ld+json"><?= json_encode($meta['schema'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
 <?php endif; ?>
 <?php if ($ga !== '' && preg_match('/^G-[A-Z0-9]+$/', $ga)): ?><script async src="https://www.googletagmanager.com/gtag/js?id=<?= e($ga) ?>"></script>
@@ -178,10 +180,12 @@ function site_footer(): void {
     <div class="db" id="cartList"></div>
     <div class="df">
       <form class="rform" id="cartForm" novalidate>
-        <div class="two"><input name="name" placeholder="<?= e(t('form.name')) ?> *" required maxlength="120"><input name="phone" type="tel" placeholder="<?= e(t('form.phone')) ?> *" required maxlength="60"></div>
-        <input name="email" type="email" placeholder="<?= e(t('form.email')) ?>" maxlength="190">
+        <div class="two"><input name="name" autocomplete="name" placeholder="<?= e(t('form.name')) ?> *" required maxlength="120"><input name="phone" type="tel" autocomplete="tel" placeholder="<?= e(t('form.phone')) ?> *" required maxlength="60"></div>
+        <input name="email" type="email" autocomplete="email" placeholder="<?= e(t('form.email')) ?>" maxlength="190">
         <textarea name="message" rows="2" placeholder="<?= e(t('form.comment')) ?>" maxlength="3000"></textarea>
-        <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" aria-label="website">
+        <input type="hidden" name="stamp" value="<?= e(form_stamp()) ?>">
+        <?php if (ts_forms_on()): ?><div class="cf-turnstile" data-sitekey="<?= e(ts_site_key()) ?>" data-size="flexible" data-language="<?= e(lang()) ?>"></div><?php endif; ?>
         <div class="fmsg err" id="cartErr" hidden></div>
         <button class="btn btn-blue" type="submit"><?= e(t('cart.send')) ?></button>
         <p class="note"><?= e(t('cart.note')) ?></p>
@@ -216,11 +220,13 @@ function request_form(string $title = ''): void {
     ?>
 <form class="c-form" data-request-form novalidate>
   <?php if ($title !== ''): ?><h4><?= e($title) ?></h4><?php endif; ?>
-  <div class="two"><input name="name" placeholder="<?= e(t('form.name')) ?> *" required maxlength="120"><input name="phone" type="tel" placeholder="<?= e(t('form.phone')) ?> *" required maxlength="60"></div>
-  <input name="email" type="email" placeholder="<?= e(t('form.email')) ?>" maxlength="190">
+  <div class="two"><input name="name" autocomplete="name" placeholder="<?= e(t('form.name')) ?> *" required maxlength="120"><input name="phone" type="tel" autocomplete="tel" placeholder="<?= e(t('form.phone')) ?> *" required maxlength="60"></div>
+  <input name="email" type="email" autocomplete="email" placeholder="<?= e(t('form.email')) ?>" maxlength="190">
   <select name="topic"><option value=""><?= e(t('form.category_ph')) ?></option><?php foreach ($cats as $c): ?><option><?= e($c['name']) ?></option><?php endforeach; ?></select>
   <textarea name="message" rows="4" placeholder="<?= e(t('form.message')) ?>" maxlength="3000"></textarea>
-  <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" aria-label="website">
+  <input type="hidden" name="stamp" value="<?= e(form_stamp()) ?>">
+  <?php if (ts_forms_on()): ?><div class="cf-turnstile" data-sitekey="<?= e(ts_site_key()) ?>" data-size="flexible" data-language="<?= e(lang()) ?>"></div><?php endif; ?>
   <div class="fmsg err" hidden></div>
   <button class="btn btn-blue" type="submit"><?= e(t('form.send')) ?> →</button>
 </form>

@@ -26,6 +26,7 @@ const SESSION_ABS_MAX  = 43200;     // 12 saat
 
 function boot_session(): void {
     if (session_status() !== PHP_SESSION_NONE) return;
+    security_headers(true);
     session_name('gpadm');
     session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Strict', 'secure' => is_https()]);
     ini_set('session.use_strict_mode', '1');
@@ -50,15 +51,41 @@ function require_login(): array {
 const LOGIN_MAX_TRIES = 6;
 const LOGIN_WINDOW    = 900;
 
+/** IP üzrə uğursuz cəhdlər (bazada — cookie silməklə limitdən yayınmaq olmur) */
+const LOGIN_IP_MAX = 10;
+function ip_attempts_table(): void {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+    try { pdo()->exec('CREATE TABLE IF NOT EXISTS login_attempts (' . cms_pk(pdo()) . ', `ip` VARCHAR(64) NOT NULL, `at` INT NOT NULL)'); } catch (Throwable $e) {}
+}
+function ip_blocked(): int {
+    ip_attempts_table();
+    try {
+        $now = time();
+        pdo()->prepare('DELETE FROM login_attempts WHERE at < ?')->execute([$now - 86400]);
+        $st = pdo()->prepare('SELECT COUNT(*) c, MIN(at) m FROM login_attempts WHERE ip = ? AND at > ?');
+        $st->execute([client_ip(), $now - LOGIN_WINDOW]);
+        $r = $st->fetch();
+        return (int)$r['c'] >= LOGIN_IP_MAX ? max(1, (int)$r['m'] + LOGIN_WINDOW - $now) : 0;
+    } catch (Throwable $e) { return 0; }
+}
+
 function login_blocked(): int {
     boot_session();
+    if ($w = ip_blocked()) return $w;
     $now  = time();
     $hits = array_values(array_filter((array)($_SESSION['login_fails'] ?? []), function ($t) use ($now) { return is_int($t) && $t > $now - LOGIN_WINDOW; }));
     $_SESSION['login_fails'] = $hits;
     if (count($hits) < LOGIN_MAX_TRIES) return 0;
     return max(1, (int)(min($hits) + LOGIN_WINDOW - $now));
 }
-function login_fail(): void { boot_session(); $_SESSION['login_fails'][] = time(); }
+function login_fail(): void {
+    boot_session();
+    $_SESSION['login_fails'][] = time();
+    ip_attempts_table();
+    try { pdo()->prepare('INSERT INTO login_attempts (ip, at) VALUES (?, ?)')->execute([client_ip(), time()]); } catch (Throwable $e) {}
+}
 
 function attempt_login(string $email, string $pass): bool {
     if (login_blocked() > 0) return false;
@@ -71,6 +98,7 @@ function attempt_login(string $email, string $pass): bool {
         boot_session();
         session_regenerate_id(true);
         unset($_SESSION['login_fails']);
+        try { pdo()->prepare('DELETE FROM login_attempts WHERE ip = ?')->execute([client_ip()]); } catch (Throwable $e) {}
         $_SESSION['start'] = time();
         $_SESSION['seen']  = time();
         $_SESSION['admin'] = ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'] ?? '', 'role' => $u['role'] ?? 'editor'];

@@ -98,6 +98,9 @@ function cms_create_tables(PDO $db): array {
             `meta_desc` TEXT,
             PRIMARY KEY (`page_id`, `lang`)",
 
+        /* Admin girişinə uğursuz cəhdlər (IP üzrə limit) */
+        'login_attempts' => "$pk, `ip` VARCHAR(64) NOT NULL, `at` INT NOT NULL",
+
         'submissions' => "$pk,
             `created_at` VARCHAR(20) DEFAULT '',
             `name` VARCHAR(120) DEFAULT '',

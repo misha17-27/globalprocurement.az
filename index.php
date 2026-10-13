@@ -16,6 +16,7 @@
  */
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
+security_headers();
 
 /* --- yolu çıxarırıq --- */
 $uri  = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);

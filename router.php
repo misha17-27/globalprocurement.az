@@ -7,8 +7,11 @@
 $path = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 $file = __DIR__ . $path;
 
-/* Bağlı qovluqlar */
-if (preg_match('~^/(includes|pages|storage)(/|$)~', $path)) { http_response_code(403); exit('Forbidden'); }
+/* Bağlı qovluq və fayllar (serverdə eyni qadağa .htaccess ilə) */
+if (preg_match('~^/(includes|pages|storage|tools|designs)(/|$)~', $path)
+    || preg_match('~(^|/)\.~', $path)
+    || preg_match('~^/admin/(config|config\.sample|db|schema|seed|lib|turnstile|import|content-pack)\.php$~', $path)
+    || preg_match('~\.(log|sqlite|sql|json|md|zip|bak)$~i', $path)) { http_response_code(403); exit('Forbidden'); }
 
 /* Mövcud statik fayllar və admin skriptləri birbaşa */
 if ($path !== '/' && is_file($file)) return false;

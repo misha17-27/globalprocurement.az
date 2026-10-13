@@ -25,9 +25,12 @@ foreach (['HTTP_ORIGIN', 'HTTP_REFERER'] as $h) {
     }
 }
 
-$raw = file_get_contents('php://input', false, null, 0, 65536);
+/* Yalnız JSON, ən çox 32 KB */
+if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 32768) out(413, ['ok' => false, 'error' => 'too large']);
+if (stripos((string)($_SERVER['CONTENT_TYPE'] ?? ''), 'application/json') !== 0) out(415, ['ok' => false, 'error' => 'json only']);
+$raw = file_get_contents('php://input', false, null, 0, 32768);
 $in  = json_decode((string)$raw, true);
-if (!is_array($in)) $in = $_POST;
+if (!is_array($in)) out(400, ['ok' => false, 'error' => 'bad json']);
 if (!empty($in['lang']) && isset(LANGS[$in['lang']])) set_lang((string)$in['lang']);
 
 $clean = function ($v, int $max, bool $multi = false): string {
@@ -49,6 +52,16 @@ $d = [
 /* Bot tələsi — doludursa "uğurlu" deyirik, amma heç nə etmirik */
 if (trim((string)($in['website'] ?? '')) !== '') out(200, ['ok' => true, 'wa' => wa_link()]);
 
+/* Vaxt tələsi: forma serverdə verilmiş imzalı möhürlə gəlməli, ən azı 3 san. əvvəl açılmış olmalıdır */
+if (!form_stamp_ok((string)($in['stamp'] ?? ''))) out(400, ['ok' => false, 'error' => t('msg.expired')]);
+
+$ip = client_ip();
+
+/* Cloudflare Turnstile (admin → Безопасность-da açılıbsa) */
+if (ts_forms_on() && !ts_check((string)($in['cf-turnstile-response'] ?? ''), ts_secret_key(), $ip)) {
+    out(400, ['ok' => false, 'error' => t('msg.captcha')]);
+}
+
 $err = [];
 if ($d['name'] === '') $err[] = t('msg.needname');
 if ($d['phone'] === '' || !preg_match('/^[0-9+()\s.\-]{5,60}$/u', $d['phone'])) $err[] = t('msg.badphone');
@@ -57,12 +70,12 @@ if ($err) out(422, ['ok' => false, 'error' => implode(' ', $err)]);
 
 /* Limit: bir sessiyadan saatda 6, bir IP-dən saatda 15 sorğu */
 if (session_status() === PHP_SESSION_NONE) {
-    @session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'path' => '/']);
+    @session_name('gpreq');
+    @session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'path' => '/', 'secure' => is_https_req()]);
     @session_start();
 }
 $now  = time();
 $hits = array_values(array_filter((array)($_SESSION['req_hits'] ?? []), function ($t) use ($now) { return is_int($t) && $t > $now - 3600; }));
-$ip   = substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64);
 $byIp = 0;
 try { $st = db()->prepare('SELECT COUNT(*) c FROM submissions WHERE ip = ? AND created_at >= ?'); $st->execute([$ip, date('Y-m-d H:i', $now - 3600)]); $byIp = (int)$st->fetch()['c']; } catch (Throwable $e) {}
 if (count($hits) >= 6 || $byIp >= 15) out(429, ['ok' => false, 'error' => t('msg.toomany')]);

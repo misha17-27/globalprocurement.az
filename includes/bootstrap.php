@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/compat.php';
+require_once __DIR__ . '/security.php';
 
 const ROOT_DIR = __DIR__ . '/..';
 
@@ -45,10 +46,13 @@ function base_url(): string {
     return $b;
 }
 
+/** Saytın mənşəyi. Host başlığı saxtalaşdırıla bilər — yalnız icazəli adlar qəbul olunur. */
+const ALLOWED_HOSTS = ['globalprocurement.az', 'www.globalprocurement.az', 'localhost', '127.0.0.1'];
 function site_origin(): string {
-    $https = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off')
-          || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-    $host = preg_replace('/[^A-Za-z0-9.:-]/', '', (string)($_SERVER['HTTP_HOST'] ?? 'globalprocurement.az'));
+    $host = strtolower(preg_replace('/[^A-Za-z0-9.:-]/', '', (string)($_SERVER['HTTP_HOST'] ?? '')));
+    $name = (string)preg_replace('/:\d+$/', '', $host);
+    if (!in_array($name, array_merge(ALLOWED_HOSTS, (array)site_cfg('allowed_hosts', [])), true)) $host = 'globalprocurement.az';
+    $https = is_https_req() || $name === 'globalprocurement.az' || $name === 'www.globalprocurement.az';
     return ($https ? 'https://' : 'http://') . $host;
 }
 
@@ -331,7 +335,7 @@ function tel_link(): string { return 'tel:' . preg_replace('/[^\d+]/', '', setti
 /** SMTP qurulubsa onunla, yoxdursa mail() ilə göndərir */
 function send_mail(string $to, string $subject, string $body, string $replyTo = '', string &$err = ''): bool {
     if (setting('smtp_host') !== '') return smtp_send($to, $subject, $body, $replyTo, $err);
-    $domain  = preg_replace('/^www\./', '', (string)parse_url(site_origin(), PHP_URL_HOST)) ?: 'globalprocurement.az';
+    $domain  = 'globalprocurement.az';     // sabit: Host başlığından asılı olmasın (SPF / saxtalaşdırma)
     $headers = 'From: =?UTF-8?B?' . base64_encode('Global Procurement') . "?= <no-reply@{$domain}>\r\n"
              . "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n";
     if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) $headers .= "Reply-To: $replyTo\r\n";

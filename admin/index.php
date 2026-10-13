@@ -301,6 +301,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     /* ---------- TƏHLÜKƏSİZLİK ---------- */
     if ($section === 'security' && $act === 'save') {
         kv_set('turnstile_site', trim((string)($_POST['turnstile_site'] ?? '')));
+        kv_set('turnstile_forms', isset($_POST['turnstile_forms']) ? '1' : '0');
         if (($_POST['turnstile_secret'] ?? '') !== '') kv_set('turnstile_secret', trim((string)$_POST['turnstile_secret']));
         if (isset($_POST['clear'])) { kv_set('turnstile_site', ''); kv_set('turnstile_secret', ''); }
         flash('Сохранено.'); redirect('index.php?section=security');
@@ -699,11 +700,21 @@ elseif ($section === 'smtp') {
 
 /* ---------------- SECURITY ---------------- */
 elseif ($section === 'security') {
-    echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="save"><h3>Cloudflare Turnstile (капча на входе в админку)</h3>';
-    echo '<p class="muted">Ключи: dash.cloudflare.com → Turnstile → Add site. Пусто — капча выключена.</p>';
+    echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="save"><h3>Cloudflare Turnstile — защита от ботов</h3>';
+    echo '<p class="muted">Ключи: dash.cloudflare.com → Turnstile → Add site (домен globalprocurement.az). Пусто — капча выключена. Работает на входе в админку и, если отмечено, во всех формах сайта.</p>';
     echo '<label>Site key</label><input type="text" name="turnstile_site" value="' . e(kv_get('turnstile_site')) . '">';
     echo '<label>Secret key</label><input type="password" name="turnstile_secret" placeholder="' . (kv_get('turnstile_secret') !== '' ? 'сохранён — оставьте пустым' : '') . '">';
+    echo '<label style="font-weight:500"><input type="checkbox" name="turnstile_forms"' . (kv_get('turnstile_forms', '1') !== '0' ? ' checked' : '') . '> Капча во всех формах сайта (заявки, контакты, список запроса)</label>';
     echo '<div style="margin-top:16px;display:flex;gap:10px"><button class="btn">Сохранить</button><button class="btn ghost" name="clear" value="1" data-confirm="Выключить капчу?">Выключить</button></div></form>';
+    echo '<div class="panel"><h3>Уже включено</h3><ul class="muted" style="line-height:1.9;margin:0;padding-left:18px">'
+       . '<li>Формы: скрытая ловушка для ботов, подписанная метка времени (бот не может отправить мгновенно или повторно старую форму), лимит 6 заявок в час с браузера и 15 с IP</li>'
+       . '<li>Реальный IP посетителя за Cloudflare (CF-Connecting-IP принимается только от серверов Cloudflare)</li>'
+       . '<li>Вход: CSRF-токен, лимит 6 попыток на сессию и 10 попыток с IP за 15 минут, сессия 2 ч бездействия / 12 ч максимум</li>'
+       . '<li>Заголовки: Content-Security-Policy, X-Frame-Options, nosniff, Referrer-Policy, HSTS (по HTTPS)</li>'
+       . '<li>Загрузки: только изображения (проверка содержимого), случайные имена, выполнение скриптов в assets/ запрещено</li>'
+       . '<li>HTML в описаниях очищается от скриптов, стилей, iframe и опасных ссылок</li>'
+       . '<li>install.php закрыт после установки; config.php, база и логи недоступны из браузера; ошибки PHP не показываются посетителям</li>'
+       . '</ul></div>';
 }
 
 /* ---------------- USERS ---------------- */

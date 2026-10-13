@@ -1,0 +1,11 @@
+---
+# cPanel → Git Version Control → «Deploy HEAD Commit»
+# Repozitoriyadan saytın faylları test qovluğuna kopyalanır.
+# Canlıya keçəndə DEPLOYPATH-i /home/globalprocuremen/public_html/ edin.
+# admin/config.php serverdə bir dəfə əl ilə yaradılır (MySQL) — deploy ona toxunmur.
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/globalprocuremen/public_html/yeni/
+    - /bin/mkdir -p $DEPLOYPATH/storage
+    - /bin/cp -R index.php robots.txt .htaccess admin assets includes pages $DEPLOYPATH
+    - /bin/cp storage/.htaccess $DEPLOYPATH/storage/

@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------
+# Global Procurement — PHP sayt
+# Bütün ünvanlar index.php-dən keçir (includes/bootstrap.php, index.php).
+# Alt qovluqda da (məs. /yeni/) dəyişiklik etmədən işləyir.
+# ---------------------------------------------------------------
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK|CONNECT|PUT|DELETE|PATCH)$ [NC]
+    RewriteRule .* - [F,L]
+
+    # Şablon, məlumat və baza qovluqları birbaşa açılmır
+    RewriteRule ^(includes|pages|storage)(/|$) - [F,L]
+
+    # Mövcud fayl və qovluqlar (assets, admin) toxunulmaz
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css               "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/jpeg             "access plus 6 months"
+    ExpiresByType image/png              "access plus 6 months"
+    ExpiresByType image/webp             "access plus 6 months"
+    ExpiresByType image/svg+xml          "access plus 6 months"
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# Baza, log, ehtiyat nüsxə və gizli fayllar bağlıdır
+<FilesMatch "\.(log|sqlite|sqlite-wal|sqlite-shm|bak|sql|zip|md|json)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+    Header always unset X-Powered-By
+</IfModule>

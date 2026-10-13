@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*?q=
+Disallow: /*?brand=
+
+Sitemap: https://globalprocurement.az/sitemap.xml

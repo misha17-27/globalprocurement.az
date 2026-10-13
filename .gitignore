@@ -3,5 +3,10 @@ Thumbs.db
 .idea/
 .vscode/
 .env
-/vendor/
-/node_modules/
+# parollar və baza — repozitoriyaya düşmür
+admin/config.php
+storage/*.sqlite*
+storage/*.log
+# paneldən yüklənən fayllar serverdə qalır
+assets/img/uploads/
+.claude/

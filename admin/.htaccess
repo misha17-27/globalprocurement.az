@@ -1,0 +1,9 @@
+# Admin qovluğunun qorunması
+<FilesMatch "^(config\.php|config\.sample\.php|db\.php|schema\.php|seed\.php|lib\.php|turnstile\.php|import\.php)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(json|sql|sqlite|bak)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes
+DirectoryIndex index.php

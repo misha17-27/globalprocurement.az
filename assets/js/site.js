@@ -179,12 +179,106 @@
     qty.addEventListener('input', syncWa); if (opt) opt.addEventListener('change', syncWa); syncWa();
     $('#addBtn').addEventListener('click', function () { add(cur, qty.value, opt ? opt.value : ''); });
 
-    $$('.thumbs button').forEach(function (b) {
-      b.addEventListener('click', function () {
-        $$('.thumbs button').forEach(function (x) { x.classList.remove('on'); });
-        b.classList.add('on'); $('#galMain').src = b.getAttribute('data-img');
-      });
+  }
+
+  /* ---------- məhsul qalereyası: oxlar, miniatürlər, sürüşdürmə, tam ekran ---------- */
+  var gal = $('#gal');
+  if (gal) {
+    var imgs = [];
+    try { imgs = JSON.parse(gal.getAttribute('data-images')) || []; } catch (e) {}
+    var n = imgs.length, gi = 0;
+    var gMain = $('#galMain'), gCount = $('#galCount'), gThumbs = $$('#galThumbs button'), opener = $('#galOpen');
+    var lb = $('#lb'), lbImg = $('#lbImg'), lbCount = $('#lbCount'), lbThumbs = $$('#lbThumbs button'), lbStage = $('#lbStage');
+    var lbOpen = function () { return !!lb && lb.classList.contains('open'); };
+
+    var preload = function (i) { if (n > 1) { var im = new Image(); im.src = imgs[(i % n + n) % n]; } };
+    var centerThumb = function (list) {
+      var b = list[gi]; if (!b) return;
+      var box = b.parentNode;
+      box.scrollTo({ left: b.offsetLeft - box.clientWidth / 2 + b.clientWidth / 2, behavior: 'smooth' });
+    };
+    var show = function (i) {
+      if (!n) return;
+      gi = (i % n + n) % n;
+      gMain.src = imgs[gi];
+      var label = (gi + 1) + ' / ' + n;
+      if (gCount) gCount.textContent = label;
+      if (lbCount) lbCount.textContent = n > 1 ? label : '';
+      if (lbOpen()) lbImg.src = imgs[gi];
+      gThumbs.forEach(function (b, k) { b.classList.toggle('on', k === gi); });
+      lbThumbs.forEach(function (b, k) { b.classList.toggle('on', k === gi); });
+      centerThumb(gThumbs);
+      if (lbOpen()) centerThumb(lbThumbs);
+      preload(gi + 1); preload(gi - 1);
+    };
+
+    $$('[data-gal]', gal).forEach(function (b) {
+      b.addEventListener('click', function () { show(gi + (+b.getAttribute('data-gal'))); });
     });
+    gThumbs.forEach(function (b, k) { b.addEventListener('click', function () { show(k); }); });
+
+    /* Barmaqla sürüşdürmə (telefon) */
+    var swipe = function (el) {
+      if (!el || n < 2) return;
+      var x0 = null, y0 = 0;
+      el.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+      el.addEventListener('touchend', function (e) {
+        if (x0 === null) return;
+        var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+        x0 = null;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          el.setAttribute('data-swiped', '1');
+          setTimeout(function () { el.removeAttribute('data-swiped'); }, 350);
+          show(gi + (dx < 0 ? 1 : -1));
+        }
+      }, { passive: true });
+    };
+    swipe(gal.querySelector('.main'));
+    swipe(lbStage);
+
+    /* Tam ekran baxış */
+    if (lb && opener) {
+      var openLb = function () {
+        if (gal.querySelector('.main').hasAttribute('data-swiped')) return;   // sürüşdürmə klik sayılmasın
+        lb.classList.add('open');
+        lb.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        lbImg.src = imgs[gi];
+        show(gi);
+        var x = lb.querySelector('.lb-x'); if (x) x.focus();
+      };
+      /* Fokus yalnız klaviatura ilə bağlananda şəklə qaytarılır (siçan istifadəçisində çərçivə qalmasın) */
+      var closeLb = function (byKeyboard) {
+        if (!lbOpen()) return;
+        lb.classList.remove('open');
+        lb.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (byKeyboard === true) opener.focus(); else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      };
+      opener.addEventListener('click', openLb);
+      $$('[data-lb]', lb).forEach(function (b) {
+        b.addEventListener('click', function (e) { e.stopPropagation(); show(gi + (+b.getAttribute('data-lb'))); });
+      });
+      lbThumbs.forEach(function (b, k) { b.addEventListener('click', function (e) { e.stopPropagation(); show(k); }); });
+      $$('[data-lb-close]', lb).forEach(function (b) { b.addEventListener('click', function (e) { closeLb(e.detail === 0); }); });
+      /* Şəklin kənarına klik — bağla */
+      lb.addEventListener('click', function (e) {
+        if ((e.target === lb || e.target === lbStage) && !lbStage.hasAttribute('data-swiped')) closeLb();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (!lbOpen()) return;
+        if (e.key === 'Escape') { closeLb(true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); show(gi - 1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); show(gi + 1); }
+        else if (e.key === 'Tab') {                         // fokus pəncərədən çıxmasın
+          var f = $$('button', lb).filter(function (el) { return el.offsetParent !== null; });
+          if (!f.length) return;
+          var first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      });
+    }
   }
   $$('.ptabs [data-tab]').forEach(function (b) {
     b.addEventListener('click', function () {

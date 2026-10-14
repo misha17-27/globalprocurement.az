@@ -62,6 +62,8 @@ return [
 
     'badge.yeni' => 'Новинка', 'badge.zəmanət' => 'Гарантия', 'badge.bestseller' => 'Хит продаж', 'badge.endirim' => 'Скидка',
 
+    'gal.prev' => 'Предыдущее фото', 'gal.next' => 'Следующее фото', 'gal.open' => 'Открыть фото', 'gal.photo' => 'Фото',
+
     '404.title' => 'Страница не найдена', '404.text' => 'Страница удалена или её адрес изменился.',
 
     'mail.new' => 'Новый запрос с сайта — globalprocurement.az', 'mail.subject' => 'Запрос с сайта', 'mail.topic' => 'Тема',

@@ -297,7 +297,7 @@ function product_by_slug(string $slug): ?array {
 function page_by_slug(string $slug): ?array {
     $d = db(); if (!$d) return null;
     try {
-        $st = $d->prepare("SELECT p.*, COALESCE(NULLIF(i.title, ''), a.title) AS title, COALESCE(NULLIF(i.lead, ''), a.lead) AS lead,
+        $st = $d->prepare("SELECT p.*, COALESCE(NULLIF(i.title, ''), a.title) AS title, COALESCE(NULLIF(i.lead, ''), a.lead) AS `lead`,
                 COALESCE(NULLIF(i.body, ''), a.body) AS body, i.meta_title, i.meta_desc
             FROM pages p LEFT JOIN page_i18n i ON i.page_id = p.id AND i.lang = ? LEFT JOIN page_i18n a ON a.page_id = p.id AND a.lang = ?
             WHERE p.slug = ? AND p.visible = 1 LIMIT 1");

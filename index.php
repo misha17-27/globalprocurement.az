@@ -18,6 +18,14 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 security_headers();
 
+/* Server qadağan olunmuş fayla (config.php, includes/, storage/, .htaccess...) müraciəti rədd edib
+   bu skripti ErrorDocument kimi çağıranda (REDIRECT_STATUS=403) sayt şablonu göstərilmir — sadə 403. */
+if (in_array((int)($_SERVER['REDIRECT_STATUS'] ?? 200), [401, 403], true)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    exit('403 Forbidden');
+}
+
 /* --- yolu çıxarırıq --- */
 $uri  = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 $uri  = rawurldecode($uri);
@@ -45,7 +53,7 @@ $legacy = [
 if (isset($legacy[$route])) { header('Location: ' . url($legacy[$route]), true, 301); exit; }
 
 /* Test qovluğu canlıya keçəndən sonra */
-if ($route === 'yeni' || strpos($route, 'yeni/') === 0) { header('Location: ' . url(substr($route, 5)), true, 301); exit; }
+if ($route === 'yeni' || strpos($route, 'yeni/') === 0) { header('Location: ' . url(ltrim((string)substr($route, 4), '/')), true, 301); exit; }
 
 /* 410 Gone: WordPress-in texniki ünvanları, spam yazıların arxivləri (kateqoriya/etiket/müəllif/lent)
    və sındırılmış sayta yeridilmiş 3118 spam yazı — Google onları indeksdən daha tez silir */

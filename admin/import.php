@@ -265,7 +265,7 @@ final class WpImport
         $row = $st->fetch();
         if (!$row) {
             $f = array_merge(['title' => '', 'lead' => '', 'body' => '', 'meta_title' => '', 'meta_desc' => ''], $f);
-            $this->db->prepare('INSERT INTO page_i18n (page_id, lang, title, lead, body, meta_title, meta_desc) VALUES (?,?,?,?,?,?,?)')
+            $this->db->prepare('INSERT INTO page_i18n (page_id, lang, title, `lead`, body, meta_title, meta_desc) VALUES (?,?,?,?,?,?,?)')
                 ->execute([$pid, $lang, $f['title'], $f['lead'], $f['body'], $f['meta_title'], $f['meta_desc']]);
             return;
         }

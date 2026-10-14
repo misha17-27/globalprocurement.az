@@ -203,7 +203,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             foreach (CMS_LANGS as $lc => $_) {
                 $t = (array)($tr[$lc] ?? []);
                 $db->prepare('DELETE FROM page_i18n WHERE page_id=? AND lang=?')->execute([$id, $lc]);
-                $db->prepare('INSERT INTO page_i18n (page_id, lang, title, lead, body, meta_title, meta_desc) VALUES (?,?,?,?,?,?,?)')
+                $db->prepare('INSERT INTO page_i18n (page_id, lang, title, `lead`, body, meta_title, meta_desc) VALUES (?,?,?,?,?,?,?)')
                    ->execute([$id, $lc, trim((string)($t['title'] ?? '')), trim((string)($t['lead'] ?? '')), sanitize_html((string)($t['body'] ?? '')),
                               trim((string)($t['meta_title'] ?? '')), trim((string)($t['meta_desc'] ?? ''))]);
             }

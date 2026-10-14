@@ -62,6 +62,8 @@ return [
 
     'badge.yeni' => 'Yeni', 'badge.zəmanət' => 'Zəmanət', 'badge.bestseller' => 'Bestseller', 'badge.endirim' => 'Endirim',
 
+    'gal.prev' => 'Əvvəlki şəkil', 'gal.next' => 'Növbəti şəkil', 'gal.open' => 'Şəkli böyüt', 'gal.photo' => 'Şəkil',
+
     '404.title' => 'Səhifə tapılmadı', '404.text' => 'Axtardığınız səhifə silinib və ya ünvan dəyişib.',
 
     'mail.new' => 'Saytdan yeni sorğu — globalprocurement.az', 'mail.subject' => 'Saytdan sorğu', 'mail.topic' => 'Mövzu',

@@ -53,10 +53,24 @@ site_header('shop');
 <section class="page">
   <div class="wrap">
     <div class="prod">
-      <div class="gal">
-        <div class="main"><img id="galMain" src="<?= e(img($images[0])) ?>" alt="<?= e($p['title']) ?>"></div>
-        <?php if (count($images) > 1): ?>
-          <div class="thumbs"><?php foreach ($images as $i => $im): ?><button type="button" class="<?= $i === 0 ? 'on' : '' ?>" data-img="<?= e(img($im)) ?>" aria-label="<?= $i + 1 ?>"><img src="<?= e(img($im)) ?>" alt="" loading="lazy"></button><?php endforeach; ?></div>
+      <?php
+      $imgUrls = array_map('img', $images);
+      $multi   = count($imgUrls) > 1;
+      $chevL   = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+      $chevR   = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+      ?>
+      <div class="gal" id="gal" data-images="<?= e(json_encode($imgUrls, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?>">
+        <div class="main">
+          <button type="button" class="zoom" id="galOpen" aria-label="<?= e(t('gal.open')) ?>"><img id="galMain" src="<?= e($imgUrls[0]) ?>" alt="<?= e($p['title']) ?>"></button>
+          <span class="zoom-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>
+          <?php if ($multi): ?>
+            <button type="button" class="nav prev" data-gal="-1" aria-label="<?= e(t('gal.prev')) ?>"><?= $chevL ?></button>
+            <button type="button" class="nav next" data-gal="1" aria-label="<?= e(t('gal.next')) ?>"><?= $chevR ?></button>
+            <span class="count" id="galCount" aria-live="polite">1 / <?= count($imgUrls) ?></span>
+          <?php endif; ?>
+        </div>
+        <?php if ($multi): ?>
+          <div class="thumbs" id="galThumbs"><?php foreach ($imgUrls as $i => $u): ?><button type="button" class="<?= $i === 0 ? 'on' : '' ?>" aria-label="<?= e(t('gal.photo')) ?> <?= $i + 1 ?>"><img src="<?= e($u) ?>" alt="" loading="lazy"></button><?php endforeach; ?></div>
         <?php endif; ?>
       </div>
       <div class="pinfo">
@@ -83,6 +97,25 @@ site_header('shop');
           <p class="note">ⓘ <?= e(t('cart.note')) ?></p>
         </div>
       </div>
+    </div>
+
+    <!-- Şəkillərin tam ekran baxışı -->
+    <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="<?= e($p['title']) ?>" aria-hidden="true">
+      <div class="lb-top">
+        <span class="lb-count" id="lbCount" aria-live="polite"></span>
+        <span class="lb-title"><?= e($p['title']) ?></span>
+        <button type="button" class="lb-x" data-lb-close aria-label="<?= e(t('btn.close')) ?>"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="lb-stage" id="lbStage">
+        <img id="lbImg" alt="<?= e($p['title']) ?>">
+        <?php if ($multi): ?>
+          <button type="button" class="lb-nav prev" data-lb="-1" aria-label="<?= e(t('gal.prev')) ?>"><?= $chevL ?></button>
+          <button type="button" class="lb-nav next" data-lb="1" aria-label="<?= e(t('gal.next')) ?>"><?= $chevR ?></button>
+        <?php endif; ?>
+      </div>
+      <?php if ($multi): ?>
+        <div class="lb-thumbs" id="lbThumbs"><?php foreach ($imgUrls as $i => $u): ?><button type="button" aria-label="<?= e(t('gal.photo')) ?> <?= $i + 1 ?>"><img src="<?= e($u) ?>" alt="" loading="lazy"></button><?php endforeach; ?></div>
+      <?php endif; ?>
     </div>
 
     <div class="ptabs">

@@ -41,6 +41,8 @@ $GLOBALS["ROUTE"] = $route;
 
 /* --- texniki ünvanlar --- */
 if ($route === 'sitemap.xml' || $route === 'sitemap_index.xml') { require __DIR__ . '/pages/sitemap.php'; exit; }
+/* Yoast-ın köhnə alt-sitemap-ları (product-sitemap.xml, page-sitemap.xml...) → yeni sitemap */
+if (preg_match('~^[a-z_-]+-sitemap\d*\.xml$~', $route)) { header('Location: ' . base_url() . '/sitemap.xml', true, 301); exit; }
 if ($route === 'api/request') { require __DIR__ . '/includes/request.php'; exit; }
 
 /* --- köhnə WordPress ünvanları → 301 --- */

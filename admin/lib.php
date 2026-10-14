@@ -98,8 +98,10 @@ function login_fail(): void {
     try { pdo()->prepare('INSERT INTO login_attempts (ip, at) VALUES (?, ?)')->execute([client_ip(), time()]); } catch (Throwable $e) {}
 }
 
-function attempt_login(string $email, string $pass): bool {
-    if (login_blocked() > 0) return false;
+/** $why: 'bad' | 'blocked' | 'off' (parol düzdür, hesab söndürülüb — bunu yalnız parolu bilən görür) */
+function attempt_login(string $email, string $pass, ?string &$why = null): bool {
+    $why = 'bad';
+    if (login_blocked() > 0) { $why = 'blocked'; return false; }
     $st = pdo()->prepare('SELECT * FROM admins WHERE email = ? LIMIT 1');
     $st->execute([trim($email)]);
     $u = $st->fetch();
@@ -114,8 +116,10 @@ function attempt_login(string $email, string $pass): bool {
         $_SESSION['seen']  = time();
         $_SESSION['admin'] = ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'] ?? '', 'role' => $u['role'] ?? 'editor'];
         try { pdo()->prepare('UPDATE admins SET last_login=? WHERE id=?')->execute([date('Y-m-d H:i'), (int)$u['id']]); } catch (Throwable $e) {}
+        $why = '';
         return true;
     }
+    if ($u && $ok) $why = 'off';
     login_fail();
     return false;
 }
@@ -138,15 +142,19 @@ function csrf_token(): string {
     return $_SESSION['csrf'];
 }
 function csrf_field(): string { return '<input type="hidden" name="_csrf" value="' . e(csrf_token()) . '">'; }
+function csrf_ok(): bool {
+    boot_session();
+    $have = (string)($_SESSION['csrf'] ?? '');
+    $sent = (string)($_POST['_csrf'] ?? '');
+    return $have !== '' && $sent !== '' && hash_equals($have, $sent);
+}
 function csrf_check(): void {
     boot_session();
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return;
-    $have = (string)($_SESSION['csrf'] ?? '');
-    $sent = (string)($_POST['_csrf'] ?? '');
-    if ($have === '' || $sent === '' || !hash_equals($have, $sent)) {
+    if (!csrf_ok()) {
         http_response_code(400);
         header('Content-Type: text/plain; charset=utf-8');
-        exit('CSRF token səhvdir. Səhifəni yeniləyin.');
+        exit('Сессия устарела. Обновите страницу (F5) и повторите действие.');
     }
 }
 
@@ -409,10 +417,39 @@ textarea.code{font-family:ui-monospace,Consolas,monospace;font-size:13px;min-hei
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .filters input,.filters select{width:auto;min-width:200px}
 .log{background:#0e1a2f;color:#cfe3ff;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;padding:16px;border-radius:12px;max-height:420px;overflow:auto;white-space:pre-wrap}
+/* vizual redaktor (məhsul / səhifə mətni) */
+.rte{border:1px solid #d5deea;border-radius:12px;background:#fff;overflow:hidden}
+.rte:focus-within{border-color:#1f8ef1;box-shadow:0 0 0 3px rgba(31,142,241,.12)}
+.rte-bar{display:flex;flex-wrap:wrap;gap:2px;padding:8px 10px;border-bottom:1px solid #e2e8f2;background:#fbfcfe;position:sticky;top:0;z-index:2}
+.rte-bar button{border:0;background:none;padding:7px 10px;border-radius:8px;font:inherit;font-size:13.5px;font-weight:700;color:#14223d;cursor:pointer;line-height:1}
+.rte-bar button:hover{background:#e6f2fe;color:#1673cc}
+.rte-bar button.on{background:#14223d;color:#fff}
+.rte-bar .sep{width:1px;background:#e2e8f2;margin:2px 6px}
+.rte-bar .src{margin-left:auto;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.rte-area{min-height:280px;max-height:620px;overflow:auto;resize:vertical;padding:18px 22px;outline:none;font-size:15.5px;line-height:1.65;color:#1d2a3d}
+.rte-area:empty::before{content:attr(data-placeholder);color:#94a3b8}
+.rte-area h2{font-size:23px;margin:22px 0 10px;line-height:1.25}
+.rte-area h3{font-size:19px;margin:18px 0 8px;line-height:1.3}
+.rte-area h4{font-size:16.5px;margin:14px 0 6px}
+.rte-area h2:first-child,.rte-area h3:first-child,.rte-area p:first-child{margin-top:0}
+.rte-area p{margin:0 0 12px}
+.rte-area ul,.rte-area ol{margin:0 0 12px;padding-left:24px}
+.rte-area li{margin-bottom:4px}
+.rte-area li p{margin:0}
+.rte-area a{color:#1673cc;text-decoration:underline}
+.rte-area img{max-width:100%;height:auto;border-radius:8px}
+.rte-area table{border-collapse:collapse;margin:12px 0}
+.rte-area td,.rte-area th{border:1px solid #d5deea;padding:6px 10px}
+.rte textarea.code{border:0;border-radius:0;min-height:360px;display:none;box-shadow:none}
+.rte.source textarea.code{display:block}
+.rte.source .rte-area{display:none}
+.rte.source .rte-bar button:not(.src){opacity:.35;pointer-events:none}
 .login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(150deg,#14223d,#0c1528 60%,#1f8ef1)}
 .login .box{background:#fff;padding:36px 32px;border-radius:18px;width:380px;max-width:92vw;box-shadow:0 24px 70px rgba(0,0,0,.35)}
 .login h2{margin:8px 0 2px;font-size:22px}
 .login .sub{color:#5b6f86;margin-bottom:16px;font-size:14px}
+.pw-warn{margin-top:6px;padding:6px 10px;border-radius:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:12.5px;line-height:1.4}
+.pw-warn[hidden]{display:none}
 @media(max-width:900px){
   .side{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.3)}
   #navtoggle:checked ~ .wrap .side{transform:none}

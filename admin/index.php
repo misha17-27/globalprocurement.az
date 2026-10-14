@@ -21,15 +21,17 @@ if ($section === 'logout') { logout(); redirect('index.php?section=login'); }
 /* ---------------- login ---------------- */
 if ($section === 'login') {
     if (current_admin()) redirect('index.php');
-    $err = '';
+    $err = ''; $email = '';
     require_once __DIR__ . '/turnstile.php';
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-        csrf_check();
-        $wait = login_blocked();
-        if ($wait > 0) $err = 'Слишком много попыток входа. Повторите через ' . ceil($wait / 60) . ' мин.';
+        $email = trim((string)($_POST['email'] ?? ''));
+        // Köhnəlmiş səhifə (sessiya bitib) — 400 əvəzinə formu yeni tokenlə yenidən göstəririk; giriş cəhdi edilmir
+        if (!csrf_ok()) $err = 'Страница входа устарела. Введите e-mail и пароль ещё раз.';
+        elseif (($wait = login_blocked()) > 0) $err = 'Слишком много попыток входа. Повторите через ' . ceil($wait / 60) . ' мин.';
         elseif (!turnstile_verify((string)($_POST['cf-turnstile-response'] ?? ''))) $err = 'Подтвердите, что вы не робот.';
-        elseif (attempt_login((string)($_POST['email'] ?? ''), (string)($_POST['password'] ?? ''))) redirect('index.php');
-        else $err = 'Неверный e-mail или пароль.';
+        elseif (attempt_login($email, (string)($_POST['password'] ?? ''), $why)) redirect('index.php');
+        elseif ($why === 'off') $err = 'Учётная запись отключена. Администратор может включить её в разделе «Пользователи».';
+        else $err = 'Неверный e-mail или пароль. Проверьте раскладку клавиатуры и Caps Lock.';
     }
     echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">';
     echo '<link rel="icon" href="' . e(admin_asset('assets/img/favicon.png')) . '" type="image/png">';
@@ -38,7 +40,8 @@ if ($section === 'login') {
     echo '<div style="text-align:center"><img src="' . e(admin_asset('assets/img/logo.png')) . '" alt="Global Procurement Group" width="128" height="96" style="height:96px;width:auto"></div>';
     echo '<h2>Вход в панель</h2><div class="sub">Управление сайтом и каталогом</div>';
     if ($err) echo '<div class="flash" style="background:#b91c1c">' . e($err) . '</div>';
-    echo csrf_field() . '<label>E-mail</label><input type="email" name="email" required autofocus autocomplete="username" spellcheck="false"><label>Пароль</label><input type="password" name="password" required autocomplete="current-password">';
+    echo csrf_field() . '<label>E-mail</label><input type="email" name="email" value="' . e($email) . '" required' . ($email === '' ? ' autofocus' : '') . ' autocomplete="username" spellcheck="false">'
+       . '<label>Пароль</label><input type="password" name="password" required' . ($email === '' ? '' : ' autofocus') . ' autocomplete="current-password">';
     echo '<div style="margin-top:14px;display:flex;justify-content:center">'; turnstile_widget(); echo '</div>';
     echo '<button class="btn" style="width:100%;margin-top:18px" type="submit">Войти</button></form></div>';
     echo '<script src="' . e(admin_asset('admin/admin.js')) . '"></script></body></html>';
@@ -344,7 +347,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $st = $db->prepare('SELECT email FROM admins WHERE id=?'); $st->execute([(int)$_POST['id']]);
             if ($u = $st->fetch()) {
                 $db->prepare('UPDATE admins SET pass_hash=?, active=1 WHERE id=?')->execute([password_hash($np, PASSWORD_DEFAULT), (int)$_POST['id']]);
-                flash('Новый пароль задан для ' . $u['email'] . '. Учётная запись включена.');
+                ip_attempts_table();
+                $db->exec('DELETE FROM login_attempts');   // köhnə uğursuz cəhdlər yeni parolla girişə mane olmasın
+                flash('Новый пароль задан для ' . $u['email'] . '. Учётная запись включена, блокировки входа сняты.');
             }
         } elseif ($act === 'unblock') {
             ip_attempts_table();
@@ -467,8 +472,8 @@ elseif ($section === 'products') {
             echo '<div class="lpane' . ($lc === 'az' ? ' on' : '') . '" data-lpane="p' . $lc . '">';
             echo '<label>Название (' . $lb . ')' . ($lc === 'az' ? ' *' : '') . '</label><input type="text" name="tr[' . $lc . '][title]" value="' . $g($lc, 'title') . '">';
             echo '<label>Короткое описание (для карточки)</label><textarea name="tr[' . $lc . '][short]" style="min-height:70px">' . $g($lc, 'short') . '</textarea>';
-            echo '<label>Полное описание (HTML)</label><textarea class="code" name="tr[' . $lc . '][body]">' . $g($lc, 'body') . '</textarea>';
-            echo '<p class="muted">Разрешены теги: &lt;p&gt; &lt;h2&gt; &lt;h3&gt; &lt;ul&gt; &lt;li&gt; &lt;strong&gt; &lt;a&gt; &lt;img&gt; &lt;table&gt;. Скрипты и стили удаляются автоматически.</p>';
+            echo '<label>Полное описание</label><textarea class="code" data-editor="1" name="tr[' . $lc . '][body]">' . $g($lc, 'body') . '</textarea>';
+            echo '<p class="muted">Выделите текст и нажмите кнопку на панели. «HTML» — правка кода. При вставке из Word и сайтов лишнее форматирование убирается; скрипты и стили удаляются при сохранении.</p>';
             echo '<label>Характеристики</label><textarea name="tr[' . $lc . '][specs]" placeholder="Толщина: 9 мм">' . $g($lc, 'specs') . '</textarea><p class="muted">Каждая строка: <code>Название: Значение</code></p>';
             echo '<label>SEO Title <span class="muted" data-len-for="mt' . $lc . '"></span></label><input type="text" id="mt' . $lc . '" data-len="30-65" name="tr[' . $lc . '][meta_title]" value="' . $g($lc, 'meta_title') . '">';
             echo '<label>Meta Description <span class="muted" data-len-for="md' . $lc . '"></span></label><textarea id="md' . $lc . '" data-len="70-165" name="tr[' . $lc . '][meta_desc]" style="min-height:70px">' . $g($lc, 'meta_desc') . '</textarea></div>';
@@ -551,8 +556,8 @@ elseif ($section === 'pages') {
             echo '<div class="lpane' . ($lc === 'az' ? ' on' : '') . '" data-lpane="g' . $lc . '">';
             echo '<label>Заголовок (' . $lb . ')</label><input type="text" name="tr[' . $lc . '][title]" value="' . $v('title') . '">';
             echo '<label>Подзаголовок (под заголовком)</label><textarea name="tr[' . $lc . '][lead]" style="min-height:60px">' . $v('lead') . '</textarea>';
-            echo '<label>Содержание (HTML)</label><textarea class="code" name="tr[' . $lc . '][body]" style="min-height:380px">' . $v('body') . '</textarea>';
-            echo '<p class="muted">Теги: &lt;h2&gt; &lt;h3&gt; &lt;p&gt; &lt;ul&gt;&lt;li&gt; &lt;strong&gt; &lt;a href&gt; &lt;img src&gt; &lt;table&gt;. Пустое содержание на RU — показывается AZ.</p>';
+            echo '<label>Содержание</label><textarea class="code" data-editor="1" name="tr[' . $lc . '][body]" style="min-height:380px">' . $v('body') . '</textarea>';
+            echo '<p class="muted">Выделите текст и нажмите кнопку на панели. «HTML» — правка кода. При вставке из Word и сайтов лишнее форматирование убирается; скрипты и стили удаляются при сохранении. Пустое содержание на RU — показывается AZ.</p>';
             echo '<div class="row"><div><label>SEO Title</label><input type="text" name="tr[' . $lc . '][meta_title]" value="' . $v('meta_title') . '"></div>';
             echo '<div><label>Meta Description</label><input type="text" name="tr[' . $lc . '][meta_desc]" value="' . $v('meta_desc') . '"></div></div></div>';
         }
@@ -764,6 +769,8 @@ elseif ($section === 'users') {
 elseif ($section === 'profile') {
     $a = current_admin();
     echo '<form method="post" class="panel">' . csrf_field() . '<h3>Мой профиль</h3>';
+    echo '<p class="muted" style="margin-top:0">Здесь меняются данные только вашей учётной записи — <b>' . e($a['email']) . '</b>.'
+       . (is_admin() ? ' Пароль другого пользователя задаётся в разделе <a href="index.php?section=users">«Пользователи»</a> → «Задать пароль».' : '') . '</p>';
     echo '<div class="row"><div><label>Имя</label><input type="text" name="name" value="' . e($a['name']) . '"></div><div><label>E-mail (логин)</label><input type="email" name="email" value="' . e($a['email']) . '" required autocomplete="username"></div></div>';
     echo '<div class="row"><div><label>Новый пароль (пусто — не менять)</label><input type="password" name="new_pass" minlength="10" autocomplete="new-password"></div><div><label>Текущий пароль *</label><input type="password" name="cur_pass" required autocomplete="current-password"></div></div>';
     echo '<div style="margin-top:16px"><button class="btn">Сохранить</button></div></form>';

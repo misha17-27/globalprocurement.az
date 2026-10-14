@@ -24,6 +24,16 @@ function admin_asset(string $rel): string {
     return base_url() . '/' . $rel . (is_file($f) ? '?v=' . filemtime($f) : '');
 }
 
+/**
+ * Şəkil plitəsi + ✕ düyməsi. admin.js ✕-a basanda plitəni dərhal gizlədir; silinmə forma saxlananda tətbiq olunur:
+ * qalereyada gizli checkbox (gal_rm[]) işarələnir, $clear verilibsə formadakı həmin sahə (məs. "image") boşaldılır.
+ */
+function img_tile(string $src, string $inner = '', string $clear = '', string $cls = ''): string {
+    return '<div class="gi' . ($cls !== '' ? ' ' . e($cls) : '') . '"' . ($clear !== '' ? ' data-clear="' . e($clear) . '"' : '') . '>'
+         . '<img src="' . e($src) . '" alt="" loading="lazy">'
+         . '<button type="button" class="gal-x" title="Удалить фото" aria-label="Удалить фото">✕</button>' . $inner . '</div>';
+}
+
 /* ---------------- sessiya / auth ---------------- */
 function is_https(): bool {
     $h = $_SERVER['HTTPS'] ?? '';
@@ -409,10 +419,18 @@ textarea.code{font-family:ui-monospace,Consolas,monospace;font-size:13px;min-hei
 .lpane.on{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips label{margin:0;font-weight:500;padding:8px 12px;border:1px solid #d5deea;border-radius:20px;cursor:pointer;display:flex;gap:6px;align-items:center;font-size:13.5px}
-.gal{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
-.gal div{position:relative;width:100px}
-.gal img{width:100px;height:100px;object-fit:contain;background:#f3f6fb;border-radius:10px;border:1px solid #e2e8f2}
-.gal label{margin:4px 0 0;font-weight:500;font-size:12px;display:flex;gap:4px;align-items:center}
+.gal{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.gal .gi{position:relative;width:100px;height:100px}
+.gal .gi.big{width:140px;height:140px}
+.gal .gi[hidden]{display:none}
+.gal img{width:100%;height:100%;object-fit:contain;background:#f3f6fb;border-radius:10px;border:1px solid #e2e8f2;display:block}
+.gal-new img{border:1px dashed #1f8ef1}
+.gal-x{position:absolute;top:-8px;right:-8px;width:26px;height:26px;padding:0;border-radius:50%;border:2px solid #fff;background:#e11d48;color:#fff;font:800 12px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 6px rgba(15,23,42,.3);transition:transform .12s,background .12s}
+.gal-x:hover,.gal-x:focus-visible{background:#be123c;transform:scale(1.1)}
+.gal-x:focus-visible{outline:2px solid #1f8ef1;outline-offset:2px}
+.gal-note{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:6px 10px}
+.gal-note.new{color:#1e4e8c;background:#eff6ff;border-color:#bfdbfe}
+.gal-note[hidden],.gal-new[hidden]{display:none}
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .filters input,.filters select{width:auto;min-width:200px}
 .log{background:#0e1a2f;color:#cfe3ff;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;padding:16px;border-radius:12px;max-height:420px;overflow:auto;white-space:pre-wrap}

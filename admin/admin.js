@@ -80,6 +80,102 @@
     inp.addEventListener('blur', function () { caps = false; check(); });
   });
 
+  /* ================= Şəkillər =================
+     ✕ — plitə dərhal gizlənir, silinmə formanı saxlayanda tətbiq olunur («Вернуть» — hamısını qaytarır).
+     Yeni seçilmiş fayllar yükləmədən əvvəl önizlənir; ✕ faylı seçimdən çıxarır. */
+  function saveLabel(form) {
+    var b = form && form.querySelector('button:not([type="button"]):not([name="action"])');
+    return '«' + (b ? b.textContent.trim() : 'Сохранить') + '»';
+  }
+  function galNote(after, cls, undo) {
+    var note = document.createElement('div'), txt = document.createElement('span');
+    note.className = 'gal-note' + (cls ? ' ' + cls : '');
+    note.hidden = true;
+    note.setAttribute('role', 'status');
+    note.appendChild(txt);
+    if (undo) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn sm ghost'; b.textContent = 'Вернуть';
+      b.addEventListener('click', undo);
+      note.appendChild(b);
+    }
+    after.insertAdjacentElement('afterend', note);
+    return function (msg) { txt.textContent = msg || ''; note.hidden = !msg; };
+  }
+
+  document.querySelectorAll('.gal:not(.gal-new)').forEach(function (gal) {
+    var tiles = Array.prototype.slice.call(gal.querySelectorAll('.gi'));
+    if (!tiles.length) return;
+    var form = gal.closest('form');
+    var field = function (t) { var n = t.getAttribute('data-clear'); return n && form ? form.querySelector('[name="' + n + '"]') : null; };
+    var say = galNote(gal, '', function () {
+      tiles.forEach(function (t) {
+        var cb = t.querySelector('input[type="checkbox"]'), inp = field(t);
+        if (cb) cb.checked = false;
+        if (inp && t.hasAttribute('data-was')) { inp.value = t.getAttribute('data-was'); t.removeAttribute('data-was'); }
+        t.hidden = false;
+      });
+      upd();
+    });
+    function upd() {
+      var n = tiles.filter(function (t) { return t.hidden; }).length;
+      say(n ? (n === 1 ? 'Фото удалено' : 'Удалено фото: ' + n) + ' — изменения применятся после нажатия ' + saveLabel(form) + '.' : '');
+    }
+    tiles.forEach(function (t) {
+      var cb = t.querySelector('input[type="checkbox"]');
+      if (cb && cb.checked) t.hidden = true;               // brauzer formu bərpa edibsə
+      var x = t.querySelector('.gal-x');
+      if (!x) return;
+      x.addEventListener('click', function () {
+        var inp = field(t);
+        if (cb) cb.checked = true;
+        if (inp) { t.setAttribute('data-was', inp.value); inp.value = ''; }
+        t.hidden = true;
+        upd();
+        var next = tiles.filter(function (o) { return !o.hidden; })[0];   // fokus itməsin
+        if (next) next.querySelector('.gal-x').focus();
+      });
+    });
+    upd();
+  });
+
+  document.querySelectorAll('input[type="file"][accept^="image"]').forEach(function (inp) {
+    var box = document.createElement('div');
+    box.className = 'gal gal-new';
+    box.hidden = true;
+    inp.insertAdjacentElement('afterend', box);
+    var say = galNote(box, 'new', null);
+    function render() {
+      var files = Array.prototype.slice.call(inp.files || []);
+      box.textContent = '';
+      files.forEach(function (file, i) {
+        var t = document.createElement('div'), img = document.createElement('img'), x = document.createElement('button');
+        t.className = 'gi'; t.title = file.name;
+        img.alt = '';
+        x.type = 'button'; x.className = 'gal-x'; x.textContent = '✕'; x.title = 'Убрать'; x.setAttribute('aria-label', 'Убрать ' + file.name);
+        x.addEventListener('click', function () { drop(i); });
+        t.appendChild(img); t.appendChild(x); box.appendChild(t);
+        if (/^image\//.test(file.type) && file.size < 15e6 && window.FileReader) {
+          var r = new FileReader();
+          r.onload = function () { img.src = String(r.result); };
+          r.readAsDataURL(file);
+        }
+      });
+      box.hidden = !files.length;
+      say(files.length ? (files.length === 1 ? 'Новое фото — загрузится' : 'Новых фото: ' + files.length + ' — загрузятся') + ' после нажатия ' + saveLabel(inp.form) + '.' : '');
+    }
+    function drop(i) {
+      try {
+        var dt = new DataTransfer();
+        Array.prototype.forEach.call(inp.files, function (f, j) { if (j !== i) dt.items.add(f); });
+        inp.files = dt.files;
+      } catch (e) { inp.value = ''; }                      // köhnə brauzer: seçimi tam sıfırla
+      render();
+    }
+    inp.addEventListener('change', render);
+    render();
+  });
+
   /* ================= Vizual redaktor =================
      <textarea data-editor> → alətlər paneli + contenteditable sahə.
      Mətn hər dəyişiklikdə textarea-ya yazılır; "HTML" düyməsi kodu göstərir.

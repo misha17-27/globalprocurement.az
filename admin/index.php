@@ -467,10 +467,10 @@ elseif ($section === 'products') {
         echo '</div>';
 
         echo '<div class="panel"><h3>Фото</h3><div class="row"><div>';
-        echo '<label>Главное фото</label>' . ($p['image'] ? '<img src="' . e($siteUrl('assets/img/' . $p['image'])) . '" style="width:140px;height:140px;object-fit:contain;background:#f3f6fb;border-radius:10px;border:1px solid #e2e8f2;display:block;margin-bottom:8px">' : '');
+        echo '<label>Главное фото</label>' . ($p['image'] ? '<div class="gal">' . img_tile($siteUrl('assets/img/' . $p['image']), '', 'image', 'big') . '</div>' : '');
         echo '<input type="text" name="image" value="' . e($p['image']) . '" placeholder="путь внутри assets/img"><label>Загрузить новое</label><input type="file" name="image_file" accept="image/*"></div><div>';
         echo '<label>Галерея</label><div class="gal">';
-        foreach (array_filter((array)json_decode((string)$p['gallery'], true)) as $gi) echo '<div><img src="' . e($siteUrl('assets/img/' . $gi)) . '" alt=""><label><input type="checkbox" name="gal_rm[]" value="' . e($gi) . '"> удалить</label></div>';
+        foreach (array_filter((array)json_decode((string)$p['gallery'], true)) as $gi) echo img_tile($siteUrl('assets/img/' . $gi), '<input type="checkbox" name="gal_rm[]" value="' . e($gi) . '" hidden>');
         echo '</div><label>Добавить фото в галерею</label><input type="file" name="gallery_files[]" accept="image/*" multiple></div></div></div>';
 
         echo '<div class="panel"><h3>Категории и параметры</h3><div class="chips">';
@@ -508,7 +508,7 @@ elseif ($section === 'categories') {
         }
         echo '<div class="row3"><div><label>Slug (адрес)</label><input type="text" name="slug" value="' . e($c['slug']) . '"></div><div><label>Порядок</label><input type="number" name="sort" value="' . (int)$c['sort'] . '"></div>';
         echo '<div><label>Картинка</label><input type="text" name="image" value="' . e($c['image']) . '"></div></div>';
-        if ($c['image']) echo '<img src="' . e($siteUrl('assets/img/' . $c['image'])) . '" style="width:100px;height:100px;object-fit:contain;margin-top:8px;border-radius:10px;background:#f3f6fb">';
+        if ($c['image']) echo '<div class="gal">' . img_tile($siteUrl('assets/img/' . $c['image']), '', 'image') . '</div>';
         echo '<label>Загрузить картинку</label><input type="file" name="image_file" accept="image/*">';
         echo '<label style="font-weight:500"><input type="checkbox" name="visible"' . ((int)$c['visible'] ? ' checked' : '') . '> Показывать на сайте</label>';
         echo '<div style="margin-top:16px"><button class="btn">Сохранить</button> <a class="btn ghost" href="index.php?section=categories">Назад</a></div></form>';
@@ -549,6 +549,7 @@ elseif ($section === 'pages') {
         }
         echo '</div><div class="panel"><div class="row3"><div><label>Адрес (slug)</label><input type="text" name="slug" value="' . e($pg['slug']) . '"></div>';
         echo '<div><label>Порядок в меню</label><input type="number" name="sort" value="' . (int)$pg['sort'] . '"></div><div><label>Картинка вверху</label><input type="text" name="image" value="' . e($pg['image']) . '"></div></div>';
+        if ($pg['image']) echo '<div class="gal">' . img_tile($siteUrl('assets/img/' . $pg['image']), '', 'image') . '</div>';
         echo '<label>Загрузить картинку</label><input type="file" name="image_file" accept="image/*">';
         echo '<label style="font-weight:500"><input type="checkbox" name="visible"' . ((int)$pg['visible'] ? ' checked' : '') . '> Опубликована</label>';
         echo '<label style="font-weight:500"><input type="checkbox" name="in_menu"' . ((int)$pg['in_menu'] ? ' checked' : '') . '> Показывать в подвале сайта</label></div>';

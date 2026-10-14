@@ -47,4 +47,19 @@
     out.style.color = n === 0 ? '#94a3b8' : (n >= +r[0] && n <= +r[1] ? '#16a34a' : '#d97706');
   }
   document.querySelectorAll('[data-len]').forEach(function (el) { lenTick(el); el.addEventListener('input', function () { lenTick(el); }); });
+
+  // Parolu göstər / gizlət — hər parol sahəsinin yanında
+  document.querySelectorAll('input[type="password"]').forEach(function (inp) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'показать';
+    b.className = 'btn sm ghost';
+    b.style.cssText = 'margin-top:6px;padding:3px 10px;font-size:12px';
+    b.addEventListener('click', function () {
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      b.textContent = show ? 'скрыть' : 'показать';
+    });
+    inp.insertAdjacentElement('afterend', b);
+  });
 })();

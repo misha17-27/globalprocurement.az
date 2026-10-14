@@ -38,9 +38,10 @@ if ($section === 'login') {
     echo '<div style="text-align:center"><img src="' . e(admin_asset('assets/img/logo.png')) . '" alt="Global Procurement Group" width="128" height="96" style="height:96px;width:auto"></div>';
     echo '<h2>Вход в панель</h2><div class="sub">Управление сайтом и каталогом</div>';
     if ($err) echo '<div class="flash" style="background:#b91c1c">' . e($err) . '</div>';
-    echo csrf_field() . '<label>E-mail</label><input type="email" name="email" required autofocus><label>Пароль</label><input type="password" name="password" required>';
+    echo csrf_field() . '<label>E-mail</label><input type="email" name="email" required autofocus autocomplete="username" spellcheck="false"><label>Пароль</label><input type="password" name="password" required autocomplete="current-password">';
     echo '<div style="margin-top:14px;display:flex;justify-content:center">'; turnstile_widget(); echo '</div>';
-    echo '<button class="btn" style="width:100%;margin-top:18px" type="submit">Войти</button></form></div></body></html>';
+    echo '<button class="btn" style="width:100%;margin-top:18px" type="submit">Войти</button></form></div>';
+    echo '<script src="' . e(admin_asset('admin/admin.js')) . '"></script></body></html>';
     exit;
 }
 
@@ -315,7 +316,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if (!password_verify((string)($_POST['cur_pass'] ?? ''), (string)$u['pass_hash'])) { flash('Текущий пароль неверный.', 'err'); redirect('index.php?section=profile'); }
         $name = trim((string)($_POST['name'] ?? '')); $email = trim((string)($_POST['email'] ?? ''));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { flash('Неверный e-mail.', 'err'); redirect('index.php?section=profile'); }
-        $db->prepare('UPDATE admins SET name=?, email=? WHERE id=?')->execute([$name, $email, $a['id']]);
+        try { $db->prepare('UPDATE admins SET name=?, email=? WHERE id=?')->execute([$name, $email, $a['id']]); }
+        catch (Throwable $e) { flash('Этот e-mail уже занят другим пользователем.', 'err'); redirect('index.php?section=profile'); }
         $np = (string)($_POST['new_pass'] ?? '');
         if ($np !== '') {
             if (mb_strlen($np) < 10) { flash('Новый пароль — минимум 10 символов.', 'err'); redirect('index.php?section=profile'); }
@@ -336,6 +338,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                    ->execute([trim((string)($_POST['name'] ?? '')), $email, password_hash($pass, PASSWORD_DEFAULT), ($_POST['role'] ?? '') === 'admin' ? 'admin' : 'editor']);
                 flash('Пользователь добавлен.');
             } catch (Throwable $e) { flash('Такой e-mail уже есть.', 'err'); }
+        } elseif ($act === 'setpass') {
+            $np = (string)($_POST['new_pass'] ?? '');
+            if (mb_strlen($np) < 10) { flash('Пароль — минимум 10 символов.', 'err'); redirect('index.php?section=users'); }
+            $st = $db->prepare('SELECT email FROM admins WHERE id=?'); $st->execute([(int)$_POST['id']]);
+            if ($u = $st->fetch()) {
+                $db->prepare('UPDATE admins SET pass_hash=?, active=1 WHERE id=?')->execute([password_hash($np, PASSWORD_DEFAULT), (int)$_POST['id']]);
+                flash('Новый пароль задан для ' . $u['email'] . '. Учётная запись включена.');
+            }
+        } elseif ($act === 'unblock') {
+            ip_attempts_table();
+            $db->exec('DELETE FROM login_attempts');
+            flash('Блокировки входа сняты.');
         } elseif ($act === 'toggle' && (int)$_POST['id'] !== $me) {
             $db->prepare('UPDATE admins SET active = 1 - active WHERE id=?')->execute([(int)$_POST['id']]);
         } elseif ($act === 'del' && (int)$_POST['id'] !== $me) {
@@ -721,19 +735,28 @@ elseif ($section === 'security') {
 /* ---------------- USERS ---------------- */
 elseif ($section === 'users') {
     $me = (int)current_admin()['id'];
-    echo '<div class="panel"><div class="tablewrap"><table><tr><th>Имя</th><th>E-mail</th><th>Роль</th><th>Вход</th><th></th></tr>';
+    echo '<div class="panel"><p class="muted" style="margin-top:0">Логин для входа — это e-mail пользователя из таблицы. Если пользователь не может войти, задайте ему новый пароль кнопкой «Задать пароль».</p>';
+    echo '<div class="tablewrap"><table><tr><th>Имя</th><th>E-mail (логин)</th><th>Роль</th><th>Последний вход</th><th></th></tr>';
     foreach ($db->query('SELECT * FROM admins ORDER BY id') as $u) {
         echo '<tr><td>' . e($u['name']) . '</td><td>' . e($u['email']) . '</td><td>' . ($u['role'] === 'admin' ? 'Администратор' : 'Редактор') . ((int)$u['active'] ? '' : ' <span class="pill gr">выкл.</span>') . '</td><td class="muted">' . e($u['last_login'] ?? '—') . '</td><td class="right">';
         if ((int)$u['id'] !== $me) {
+            echo '<form method="post" style="display:inline-flex;gap:6px;align-items:center;margin:0 6px 6px 0" autocomplete="off">' . csrf_field() . '<input type="hidden" name="action" value="setpass"><input type="hidden" name="id" value="' . $u['id'] . '">'
+               . '<input type="password" name="new_pass" minlength="10" required placeholder="новый пароль" autocomplete="new-password" style="width:170px;padding:6px 10px"><button class="btn sm">Задать пароль</button></form> ';
             echo '<form method="post" style="display:inline">' . csrf_field() . '<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="' . $u['id'] . '"><button class="btn sm ghost">' . ((int)$u['active'] ? 'Отключить' : 'Включить') . '</button></form> ';
             echo '<form method="post" style="display:inline" data-confirm="Удалить пользователя?">' . csrf_field() . '<input type="hidden" name="action" value="del"><input type="hidden" name="id" value="' . $u['id'] . '"><button class="btn sm red">✕</button></form>';
         } else echo '<span class="muted">это вы</span>';
         echo '</td></tr>';
     }
     echo '</table></div></div>';
-    echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="add"><h3>Добавить пользователя</h3>';
-    echo '<div class="row"><div><label>Имя</label><input type="text" name="name"></div><div><label>E-mail</label><input type="email" name="email" required></div></div>';
-    echo '<div class="row"><div><label>Пароль (мин. 10 символов)</label><input type="password" name="pass" required minlength="10"></div><div><label>Роль</label><select name="role"><option value="editor">Редактор — товары, тексты, заявки</option><option value="admin">Администратор — всё</option></select></div></div>';
+    ip_attempts_table();
+    $blocked = 0;
+    try { $st = $db->prepare('SELECT COUNT(DISTINCT ip) c FROM login_attempts WHERE at > ?'); $st->execute([time() - LOGIN_WINDOW]); $blocked = (int)$st->fetch()['c']; } catch (Throwable $e) {}
+    echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="unblock"><h3>Блокировки входа</h3>'
+       . '<p class="muted">После 10 неверных паролей с одного IP вход закрывается на 15 минут. Сейчас IP с неудачными попытками: <b>' . $blocked . '</b>.</p>'
+       . '<button class="btn ghost"' . ($blocked ? '' : ' disabled') . '>Снять блокировки</button></form>';
+    echo '<form method="post" class="panel" autocomplete="off">' . csrf_field() . '<input type="hidden" name="action" value="add"><h3>Добавить пользователя</h3>';
+    echo '<div class="row"><div><label>Имя</label><input type="text" name="name" autocomplete="off"></div><div><label>E-mail (будет логином)</label><input type="email" name="email" required autocomplete="off" spellcheck="false"></div></div>';
+    echo '<div class="row"><div><label>Пароль (мин. 10 символов)</label><input type="password" name="pass" required minlength="10" autocomplete="new-password"></div><div><label>Роль</label><select name="role"><option value="editor">Редактор — товары, тексты, заявки</option><option value="admin">Администратор — всё</option></select></div></div>';
     echo '<div style="margin-top:16px"><button class="btn">Добавить</button></div></form>';
 }
 
@@ -741,8 +764,8 @@ elseif ($section === 'users') {
 elseif ($section === 'profile') {
     $a = current_admin();
     echo '<form method="post" class="panel">' . csrf_field() . '<h3>Мой профиль</h3>';
-    echo '<div class="row"><div><label>Имя</label><input type="text" name="name" value="' . e($a['name']) . '"></div><div><label>E-mail (логин)</label><input type="email" name="email" value="' . e($a['email']) . '" required></div></div>';
-    echo '<div class="row"><div><label>Новый пароль (пусто — не менять)</label><input type="password" name="new_pass" minlength="10"></div><div><label>Текущий пароль *</label><input type="password" name="cur_pass" required></div></div>';
+    echo '<div class="row"><div><label>Имя</label><input type="text" name="name" value="' . e($a['name']) . '"></div><div><label>E-mail (логин)</label><input type="email" name="email" value="' . e($a['email']) . '" required autocomplete="username"></div></div>';
+    echo '<div class="row"><div><label>Новый пароль (пусто — не менять)</label><input type="password" name="new_pass" minlength="10" autocomplete="new-password"></div><div><label>Текущий пароль *</label><input type="password" name="cur_pass" required autocomplete="current-password"></div></div>';
     echo '<div style="margin-top:16px"><button class="btn">Сохранить</button></div></form>';
 }
 

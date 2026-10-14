@@ -325,7 +325,7 @@ function layout_top(string $active, string $title): void {
     echo flash_render();
 }
 function layout_bottom(): void {
-    echo '</div></main><label for="navtoggle" class="scrim"></label></div><script src="admin.js?v=2"></script></body></html>';
+    echo '</div></main><label for="navtoggle" class="scrim"></label></div><script src="' . e(admin_asset('admin/admin.js')) . '"></script></body></html>';
 }
 function admin_logo(): string {
     return '<svg width="34" height="30" viewBox="0 0 48 40"><path d="M21 1 6 39h8.5L27.5 6z" fill="#47a7ff"/><path d="M30 9 19 39h8.5l7-18.5z" fill="#47a7ff"/><path d="M37 25l7 14H30z" fill="#8bc34a"/></svg>';

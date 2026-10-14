@@ -46,6 +46,10 @@ DirectoryIndex index.php
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
+# PHP-nin avtomatik jurnalı (uzantısız "error_log") — bütün qovluqlarda bağlıdır
+<FilesMatch "^(error_log|php_errorlog)$">
+    Require all denied
+</FilesMatch>
 
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"

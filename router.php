@@ -11,7 +11,8 @@ $file = __DIR__ . $path;
 if (preg_match('~^/(includes|pages|storage|tools|designs)(/|$)~', $path)
     || preg_match('~(^|/)\.~', $path)
     || preg_match('~^/admin/(config|config\.sample|db|schema|seed|lib|turnstile|import|content-pack)\.php$~', $path)
-    || preg_match('~\.(log|sqlite|sql|json|md|zip|bak)$~i', $path)) { http_response_code(403); exit('Forbidden'); }
+    || preg_match('~\.(log|sqlite|sql|json|md|zip|bak)$~i', $path)
+    || preg_match('~(^|/)(error_log|php_errorlog)$~', $path)) { http_response_code(403); exit('Forbidden'); }
 
 /* Mövcud statik fayllar və admin skriptləri birbaşa */
 if ($path !== '/' && is_file($file)) return false;

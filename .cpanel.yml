@@ -1,11 +1,11 @@
 ---
 # cPanel → Git Version Control → «Deploy HEAD Commit»
-# Repozitoriyadan saytın faylları test qovluğuna kopyalanır.
-# Canlıya keçəndə DEPLOYPATH-i /home/globalprocuremen/public_html/ edin.
-# admin/config.php serverdə bir dəfə əl ilə yaradılır (MySQL) — deploy ona toxunmur.
+# Saytın faylları əsas domenin qovluğuna kopyalanır (globalprocurement.az).
+# admin/config.php serverdə bir dəfə əl ilə yaradılır (MySQL) — deploy ona toxunmur,
+# assets/img/uploads (paneldən yüklənən şəkillər) da saxlanılır.
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/globalprocuremen/public_html/yeni/
+    - export DEPLOYPATH=/home/globalprocuremen/public_html/
     - /bin/mkdir -p $DEPLOYPATH/storage
     - /bin/cp -R index.php robots.txt .htaccess admin assets includes pages $DEPLOYPATH
     - /bin/cp storage/.htaccess $DEPLOYPATH/storage/

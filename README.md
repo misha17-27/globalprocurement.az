@@ -24,7 +24,8 @@ Sonra bir dəfə: `http://localhost:8020/admin/install.php?token=<install_token>
    səhifələr, şəkillər və SEO gəlir (eyni hostinqdə `wp-content/uploads` birbaşa kopyalanır).
 7. Panel → **Почта (SMTP)**: sorğuların gedəcəyi poçt və SMTP (cPanel → Email Accounts → Connect Devices).
 
-Canlıya keçid: `.cpanel.yml`-də `DEPLOYPATH`-i `public_html/` edin, köhnə WordPress fayllarını arxivləyin.
+**Canlı:** `.cpanel.yml` → `DEPLOYPATH=/home/globalprocuremen/public_html/` (əsas domen).
+Köhnə WordPress faylları `/home/globalprocuremen/wp-old/`-da (veb-dən açılmır); `admin/config.php` serverdə əl ilə saxlanılır.
 
 ## Struktur
 

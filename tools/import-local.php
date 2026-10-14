@@ -7,7 +7,7 @@
  *   2) php tools/import-local.php <qovluq> [--keep]
  *
  * --keep: yalnız boş sahələr doldurulur (paneldə edilən dəyişikliklər qalır).
- * Serverdə eyni işi admin → «Импорт из WordPress» görür (REST API ilə).
+ * Paneldə idxal bölməsi yoxdur — köçürmə bitib, təkrar idxal paneldəki düzəlişləri silə bilərdi.
  */
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }

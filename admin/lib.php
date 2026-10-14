@@ -265,7 +265,6 @@ const SECTIONS = [
     'images'      => ['Изображения', '❏'],
     'contacts'    => ['Контакты', '☏'],
     'seo'         => ['SEO', '☌'],
-    'import'      => ['Импорт из WordPress', '⇩'],
     'smtp'        => ['Почта (SMTP)', '✉'],
     'security'    => ['Безопасность', '⚿'],
     'users'       => ['Пользователи', '☺'],
@@ -273,11 +272,11 @@ const SECTIONS = [
 ];
 const GROUPS = [
     'ОСНОВНОЕ'  => ['overview', 'submissions'],
-    'КАТАЛОГ'   => ['products', 'categories', 'import'],
+    'КАТАЛОГ'   => ['products', 'categories'],
     'КОНТЕНТ'   => ['pages', 'texts', 'images', 'contacts', 'seo'],
     'НАСТРОЙКИ' => ['smtp', 'security', 'users', 'profile'],
 ];
-const ADMIN_ONLY = ['users', 'smtp', 'security', 'import'];
+const ADMIN_ONLY = ['users', 'smtp', 'security'];
 const LANG_SECTIONS = ['texts', 'seo'];
 
 function require_admin(): void {

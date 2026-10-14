@@ -47,5 +47,5 @@ echo '<p>Cədvəllər: ' . e(implode(', ', $tables)) . '</p>';
 echo '<p>Əlavə olundu — parametrlər: ' . $seed['settings'] . ', mətnlər: ' . $seed['texts'] . ', kateqoriyalar: ' . $seed['categories'] . ', məhsullar: ' . $seed['products'] . '</p>';
 echo '<p>SEO və RU tərcümələr: məhsul ' . $pack['products'] . ', kateqoriya ' . $pack['categories'] . ', səhifə ' . $pack['pages'] . '</p>';
 echo $made ? '<p>Admin hesabı yaradıldı: <code>' . e($email) . '</code></p>' : '<p>Admin hesabı artıq var.</p>';
-echo '<p><a href="index.php">→ Panelə daxil olun</a>, sonra <b>Импорт из WordPress</b> bölməsindən məhsulları köhnə saytdan gətirin.</p>';
+echo '<p><a href="index.php">→ Panelə daxil olun</a>.</p>';
 echo '<p style="color:#b91c1c"><b>Vacib:</b> <code>admin/install.php</code> faylını serverdən silin.</p>';

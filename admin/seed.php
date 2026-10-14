@@ -2,7 +2,7 @@
 /*
  * İlkin məzmun: kateqoriyalar, məhsullar, mətnlər və parametrlər.
  * Mövcud sətirlərə toxunmur — təkrar işə salmaq təhlükəsizdir.
- * Məhsulların tam təsviri və şəkilləri sonra «Импорт из WordPress» ilə gəlir.
+ * Məhsulların tam təsviri və şəkilləri WordPress-dən köçürülüb (tools/import-local.php).
  */
 declare(strict_types=1);
 

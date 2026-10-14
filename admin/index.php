@@ -276,19 +276,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         redirect('index.php?section=images');
     }
 
-    /* ---------- İMPORT ---------- */
-    if ($section === 'import') {
-        require_once __DIR__ . '/import.php';
-        $url = rtrim(trim((string)($_POST['wp_url'] ?? '')), '/');
-        if (!preg_match('~^https?://[^\s/$.?#].[^\s]*$~i', $url)) { flash('Неверный адрес сайта.', 'err'); redirect('index.php?section=import'); }
-        kv_set('wp_url', $url);
-        $imp = new WpImport($db, $url, isset($_POST['overwrite']));
-        if ($act === 'test') $imp->test(); else { $imp->run(); require_once __DIR__ . '/content-pack.php'; cms_apply_pack($db); }
-        $_SESSION['import_log'] = $imp->log;
-        flash($act === 'test' ? 'Проверка завершена — см. журнал.' : sprintf('Импорт завершён: товаров %d, категорий %d, картинок %d, ошибок %d.', $imp->stat['products'], $imp->stat['cats'], $imp->stat['images'], $imp->stat['errors']), $imp->stat['errors'] ? 'err' : 'ok');
-        redirect('index.php?section=import');
-    }
-
     /* ---------- SMTP ---------- */
     if ($section === 'smtp') {
         if ($act === 'save') {
@@ -405,7 +392,6 @@ if ($section === 'overview') {
     echo '<tr><td>Отправка почты</td><td>' . (kv_get('smtp_host') !== '' ? '<span class="pill g">SMTP</span>' : '<span class="pill gr">функция mail()</span>') . ' → ' . e(kv_get('mail_to')) . '</td></tr>';
     echo '<tr><td>WhatsApp для заявок</td><td><b>+' . e(preg_replace('/\D/', '', kv_get('whatsapp'))) . '</b></td></tr>';
     echo '<tr><td>База данных</td><td>' . ($db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? 'SQLite' : 'MySQL') . ' · PHP ' . e(PHP_VERSION) . '</td></tr></table>';
-    if ($noBody > 0 && is_admin()) echo '<p style="margin-top:14px"><a class="btn" href="index.php?section=import">Импортировать описания и фото из WordPress</a></p>';
     echo '</div>';
 }
 
@@ -572,7 +558,7 @@ elseif ($section === 'pages') {
             FROM pages p LEFT JOIN page_i18n a ON a.page_id = p.id AND a.lang = 'az' ORDER BY p.sort, p.id")->fetchAll();
         echo '<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px"><span class="muted">Главная, каталог и контакты — отдельные разделы («Тексты сайта», «Товары», «Контакты»).</span><a class="btn" href="index.php?section=pages&new=1">+ Страница</a></div>';
         echo '<div class="tablewrap"><table><tr><th>Заголовок</th><th>Адрес</th><th>RU</th><th>Статус</th><th></th></tr>';
-        if (!$rows) echo '<tr><td colspan="5" class="muted">Страниц пока нет — выполните «Импорт из WordPress».</td></tr>';
+        if (!$rows) echo '<tr><td colspan="5" class="muted">Страниц пока нет — нажмите «+ Страница».</td></tr>';
         foreach ($rows as $r) {
             echo '<tr><td><b>' . e($r['title'] ?: $r['slug']) . '</b></td><td class="muted">/' . e($r['slug']) . '/</td>';
             echo '<td>' . ((int)$r['ru_len'] > 0 ? '<span class="pill g">есть</span>' : '<span class="pill gr">нет</span>') . '</td>';
@@ -687,18 +673,6 @@ elseif ($section === 'images') {
         echo '<input type="text" readonly value="' . e($rel) . '" data-copy="1" style="width:100%;font-size:10.5px;margin-top:6px;padding:4px;cursor:pointer"></div>';
     }
     echo '</div></div>';
-}
-
-/* ---------------- IMPORT ---------------- */
-elseif ($section === 'import') {
-    $log = $_SESSION['import_log'] ?? []; unset($_SESSION['import_log']);
-    echo '<form method="post" class="panel">' . csrf_field() . '<h3>Перенос товаров из WordPress / WooCommerce</h3>';
-    echo '<p class="muted">Сервер забирает со старого сайта все категории, товары, описания (AZ и RU разделяются автоматически), характеристики, галереи и SEO (Yoast). Картинки скачиваются в <code>assets/img/products/</code> — если WordPress лежит на этом же хостинге, они копируются напрямую. Адреса товаров (slug) сохраняются как были — позиции в Google не теряются.</p>';
-    echo '<label>Адрес старого сайта</label><input type="url" name="wp_url" value="' . e(kv_get('wp_url', 'https://globalprocurement.az')) . '" required>';
-    echo '<label style="font-weight:500"><input type="checkbox" name="overwrite" checked> Обновлять уже заполненные поля (названия, описания, фото) данными из WordPress</label>';
-    echo '<p class="muted">Без галочки заполняются только пустые поля — ваши правки в админке сохранятся. Повторный запуск безопасен: дубликаты не создаются.</p>';
-    echo '<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" name="action" value="test">Проверить подключение</button><button class="btn" name="action" value="run" data-confirm="Запустить импорт? Это займёт до пары минут.">Импортировать</button></div></form>';
-    if ($log) echo '<div class="panel"><h3>Журнал</h3><div class="log">' . e(implode("\n", $log)) . '</div></div>';
 }
 
 /* ---------------- SMTP ---------------- */

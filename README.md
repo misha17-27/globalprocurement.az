@@ -20,8 +20,8 @@ Sonra bir dəfə: `http://localhost:8020/admin/install.php?token=<install_token>
 3. cPanel → **MySQL Databases**: baza + istifadəçi yaradın.
 4. `public_html/yeni/admin/config.php` yaradın (`config.sample.php`-dən): `driver => 'mysql'`, baza məlumatları, öz parolunuz və tokeniniz.
 5. Bir dəfə açın: `/yeni/admin/install.php?token=...` → sonra panelə daxil olun.
-6. Panel → **Импорт из WordPress** → «Импортировать»: köhnə saytdan bütün məhsullar, kateqoriyalar,
-   səhifələr, şəkillər və SEO gəlir (eyni hostinqdə `wp-content/uploads` birbaşa kopyalanır).
+6. Köhnə WordPress-dən köçürmə artıq edilib; paneldə idxal bölməsi yoxdur (təkrar idxal əl ilə edilən
+   dəyişiklikləri silə bilərdi). Lazım olsa — yalnız lokal: `tools/import-local.php` (aşağıda).
 7. Panel → **Почта (SMTP)**: sorğuların gedəcəyi poçt və SMTP (cPanel → Email Accounts → Connect Devices).
 
 **Canlı:** `.cpanel.yml` → `DEPLOYPATH=/home/globalprocuremen/public_html/` (əsas domen).
@@ -67,7 +67,6 @@ Köhnə WordPress ünvanları 301 ilə yönləndirilir: `/contact-us/ → /elaqe
 | Заявки | saytdan gələn sorğular: məhsullar, miqdar, WhatsApp/zəng düymələri |
 | Товары | ad / təsvir / xüsusiyyətlər / SEO (AZ, RU), şəkil + qalereya, qiymət, variantlar, kateqoriyalar, «ana səhifədə» |
 | Категории | ad, təsvir, SEO, şəkil, sıra |
-| Импорт из WordPress | köhnə saytdan məhsul, kateqoriya, səhifə, şəkil və SEO köçürmə |
 | Страницы | Haqqımızda, WELDER, Şirkət haqqında və yeni səhifələr |
 | Тексты сайта | ana səhifənin bütün blokları, FAQ, rəqəmlər (AZ / RU) |
 | Изображения | yükləmə və media kitabxanası |

@@ -91,6 +91,8 @@ Köhnə WordPress ünvanları 301 ilə yönləndirilir: `/contact-us/ → /elaqe
 | Fayllar | `admin/config.php`, baza, loglar, `includes/`, `pages/`, `storage/`, gizli fayllar brauzerdən bağlıdır; `install.php` quraşdırmadan sonra bağlanır |
 | Xətalar | ziyarətçiyə göstərilmir → `storage/php-errors.log` |
 | Host başlığı | canonical / OG / e-poçt yalnız icazəli domenlə (`ALLOWED_HOSTS`) |
+| Ünvanlar | yolda `\` və idarəedici simvollar → 400 (açıq yönləndirmənin qarşısı), `//` birləşdirilir |
+| install.php | deploy zamanı serverdən silinir (`.cpanel.yml`) |
 
 Tövsiyə: Cloudflare-də SSL rejimi **Full (strict)** + cPanel-də AutoSSL; Turnstile açarlarını admin → Безопасность-a yazın.
 

@@ -29,6 +29,14 @@ if (in_array((int)($_SERVER['REDIRECT_STATUS'] ?? 200), [401, 403], true)) {
 /* --- yolu çıxarırıq --- */
 $uri  = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 $uri  = rawurldecode($uri);
+/* Yolda "\" və idarəedici simvollar qəbul olunmur: brauzer "/\host"-u "//host" kimi oxuyur,
+   bu da bizim 301-lərdən saxta saytlara açıq yönləndirmə (open redirect) yaradardı. */
+if (preg_match('~[\\\\\x00-\x1F\x7F]~', $uri)) {
+    http_response_code(400);
+    header('Content-Type: text/plain; charset=utf-8');
+    exit('400 Bad Request');
+}
+$uri  = (string)preg_replace('~/{2,}~', '/', $uri);
 $base = base_url();
 if ($base !== '' && stripos($uri, $base) === 0) $uri = substr($uri, strlen($base));
 $path = trim($uri, '/');

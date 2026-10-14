@@ -30,8 +30,10 @@ function security_headers(bool $admin = false): void {
     header('Cross-Origin-Opener-Policy: same-origin');
     /* CSP: skriptlər yalnız öz faylımızdan + Turnstile + Google Analytics.
        'unsafe-eval' — Turnstile-in yoxlama mühərriki üçün lazımdır. Inline <script> YOXDUR. */
+    /* 'unsafe-eval' yalnız Turnstile açarları qurulanda (kapçanın mühərriki onsuz işləmir) */
+    $eval = (function_exists('setting') && setting('turnstile_site') !== '') ? " 'unsafe-eval'" : '';
     $csp = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; "
-         . "script-src 'self' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com; "
+         . "script-src 'self'{$eval} https://challenges.cloudflare.com https://www.googletagmanager.com; "
          . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
          . "font-src 'self' https://fonts.gstatic.com data:; "
          . "img-src 'self' data: https:; "

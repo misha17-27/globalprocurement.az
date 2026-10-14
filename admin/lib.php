@@ -379,6 +379,8 @@ main{flex:1;min-width:0}
 .scrim{display:none}
 .body{padding:24px 26px 60px;max-width:1180px}
 .flash{color:#fff;padding:12px 16px;border-radius:10px;margin-bottom:14px;font-weight:600;font-size:14px}
+.toast{position:fixed;top:18px;left:50%;z-index:60;max-width:min(560px,calc(100vw - 32px));margin:0;transform:translateX(-50%);box-shadow:0 12px 32px rgba(15,23,42,.28);transition:opacity .35s,transform .35s}
+.toast.out{opacity:0;transform:translate(-50%,-10px)}
 .btn{display:inline-block;background:#1f8ef1;color:#fff;border:0;padding:10px 18px;border-radius:24px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;line-height:1.3}
 .btn:hover{background:#1673cc}
 .btn.ghost{background:transparent;color:#14223d;border:1.5px solid #d5deea}

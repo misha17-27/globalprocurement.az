@@ -143,7 +143,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 if ($cid > 0) $db->prepare('INSERT INTO product_category (product_id, category_id) VALUES (?,?)')->execute([$id, $cid]);
             }
             flash('Товар сохранён.');
-            redirect(isset($_POST['stay']) ? $back . '&edit=' . $id : $back);
+            redirect($back . '&edit=' . $id);             // saxlayandan sonra səhifədə qalırıq
         }
         if ($act === 'del') {
             $id = (int)$_POST['id'];
@@ -179,7 +179,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 $db->prepare('INSERT INTO category_i18n (category_id, lang, name, descr, meta_title, meta_desc) VALUES (?,?,?,?,?,?)')
                    ->execute([$id, $lc, trim((string)($t['name'] ?? '')), trim((string)($t['descr'] ?? '')), trim((string)($t['meta_title'] ?? '')), trim((string)($t['meta_desc'] ?? ''))]);
             }
-            flash('Категория сохранена.'); redirect($back);
+            flash('Категория сохранена.'); redirect($back . '&edit=' . $id);
         }
         if ($act === 'del') {
             $id = (int)$_POST['id'];
@@ -212,7 +212,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                    ->execute([$id, $lc, trim((string)($t['title'] ?? '')), trim((string)($t['lead'] ?? '')), sanitize_html((string)($t['body'] ?? '')),
                               trim((string)($t['meta_title'] ?? '')), trim((string)($t['meta_desc'] ?? ''))]);
             }
-            flash('Страница сохранена.'); redirect(isset($_POST['stay']) ? $back . '&edit=' . $id : $back);
+            flash('Страница сохранена.'); redirect($back . '&edit=' . $id);
         }
         if ($act === 'del') {
             $db->prepare('DELETE FROM page_i18n WHERE page_id=?')->execute([(int)$_POST['id']]);
@@ -485,7 +485,7 @@ elseif ($section === 'products') {
         echo '<label>Варианты для выбора клиентом</label><textarea name="options" placeholder="9 mm&#10;12 mm&#10;15 mm" style="min-height:70px">' . e($p['options']) . '</textarea><p class="muted">По одному в строке. Пусто — без выбора.</p>';
         echo '<label style="font-weight:500"><input type="checkbox" name="visible"' . ((int)$p['visible'] ? ' checked' : '') . '> Показывать на сайте</label>';
         echo '<label style="font-weight:500"><input type="checkbox" name="featured"' . ((int)$p['featured'] ? ' checked' : '') . '> ★ Показывать на главной</label></div>';
-        echo '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Сохранить</button><button class="btn ghost" name="stay" value="1">Сохранить и остаться</button><a class="btn ghost" href="index.php?section=products">Назад к списку</a></div></form>';
+        echo '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Сохранить</button><a class="btn ghost" href="index.php?section=products">Назад к списку</a></div></form>';
     }
 }
 
@@ -511,7 +511,7 @@ elseif ($section === 'categories') {
         if ($c['image']) echo '<div class="gal">' . img_tile($siteUrl('assets/img/' . $c['image']), '', 'image') . '</div>';
         echo '<label>Загрузить картинку</label><input type="file" name="image_file" accept="image/*">';
         echo '<label style="font-weight:500"><input type="checkbox" name="visible"' . ((int)$c['visible'] ? ' checked' : '') . '> Показывать на сайте</label>';
-        echo '<div style="margin-top:16px"><button class="btn">Сохранить</button> <a class="btn ghost" href="index.php?section=categories">Назад</a></div></form>';
+        echo '<div style="margin-top:16px"><button class="btn">Сохранить</button> <a class="btn ghost" href="index.php?section=categories">Назад к списку</a></div></form>';
     } else {
         echo '<div class="panel"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><span class="muted">Адрес категории: /product-category/slug/</span><a class="btn" href="index.php?section=categories&new=1">+ Категория</a></div>';
         echo '<div class="tablewrap"><table><tr><th></th><th>Название</th><th>Slug</th><th>Товаров</th><th>Порядок</th><th></th></tr>';
@@ -553,7 +553,7 @@ elseif ($section === 'pages') {
         echo '<label>Загрузить картинку</label><input type="file" name="image_file" accept="image/*">';
         echo '<label style="font-weight:500"><input type="checkbox" name="visible"' . ((int)$pg['visible'] ? ' checked' : '') . '> Опубликована</label>';
         echo '<label style="font-weight:500"><input type="checkbox" name="in_menu"' . ((int)$pg['in_menu'] ? ' checked' : '') . '> Показывать в подвале сайта</label></div>';
-        echo '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Сохранить</button><button class="btn ghost" name="stay" value="1">Сохранить и остаться</button><a class="btn ghost" href="index.php?section=pages">Назад</a></div></form>';
+        echo '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Сохранить</button><a class="btn ghost" href="index.php?section=pages">Назад</a></div></form>';
     } else {
         $rows = $db->query("SELECT p.*, a.title, (SELECT LENGTH(b.body) FROM page_i18n b WHERE b.page_id = p.id AND b.lang = 'ru') ru_len
             FROM pages p LEFT JOIN page_i18n a ON a.page_id = p.id AND a.lang = 'az' ORDER BY p.sort, p.id")->fetchAll();

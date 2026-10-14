@@ -13,6 +13,15 @@
     if (msg && !window.confirm(msg)) ev.preventDefault();
   });
 
+  // Saxlayandan sonra eyni yerə qayıtmaq üçün: sürüşmə mövqeyi və açıq dil tabı (AZ/RU) yadda saxlanılır
+  var RET = 'gpadm-return';
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target;
+    if (!(f instanceof HTMLFormElement) || ev.defaultPrevented || (f.method || '').toLowerCase() !== 'post') return;
+    var tabs = Array.prototype.map.call(document.querySelectorAll('[data-ltab]:not(.ghost)'), function (b) { return b.getAttribute('data-ltab'); });
+    try { sessionStorage.setItem(RET, JSON.stringify({ url: location.pathname + location.search, y: Math.round(window.scrollY), tabs: tabs, t: Date.now() })); } catch (e) {}
+  });
+
   // Silmə düymələri
   document.addEventListener('click', function (ev) {
     var el = ev.target.closest('[data-confirm]');
@@ -325,4 +334,26 @@
       ta.value = cleanHTML(area.innerHTML);
     });
   });
+
+  /* Saxlamadan sonra həmin səhifə: həmin dil tabı, həmin yer; mesaj ekranın yuxarısında görünür.
+     Redaktorlar qurulandan sonra işləyir ki, hündürlüklər artıq son halında olsun. */
+  (function () {
+    var ret = null;
+    try { ret = JSON.parse(sessionStorage.getItem(RET) || 'null'); sessionStorage.removeItem(RET); } catch (e) { return; }
+    if (!ret || Date.now() - ret.t > 120000 || ret.url !== location.pathname + location.search) return;
+    var btns = document.querySelectorAll('[data-ltab]');
+    (ret.tabs || []).forEach(function (k) {
+      Array.prototype.forEach.call(btns, function (b) { if (b.getAttribute('data-ltab') === k) b.click(); });
+    });
+    if (ret.y > 0) window.scrollTo(0, ret.y);
+    var fl = document.querySelector('.flash');
+    if (fl && ret.y > 120) {
+      var t = fl.cloneNode(true);
+      t.classList.add('toast');
+      t.setAttribute('role', 'status');
+      document.body.appendChild(t);
+      setTimeout(function () { t.classList.add('out'); }, 2800);
+      setTimeout(function () { t.remove(); }, 3300);
+    }
+  })();
 })();

@@ -53,7 +53,13 @@ $legacy = [
 if (isset($legacy[$route])) { header('Location: ' . url($legacy[$route]), true, 301); exit; }
 
 /* Test qovluğu canlıya keçəndən sonra */
-if ($route === 'yeni' || strpos($route, 'yeni/') === 0) { header('Location: ' . url(ltrim((string)substr($route, 4), '/')), true, 301); exit; }
+if ($route === 'yeni' || strpos($route, 'yeni/') === 0) {
+    $rest = ltrim((string)substr($route, 4), '/');
+    $to   = url('') . $rest;                                           // faylda (…/site.css) sonda slash olmur
+    if ($rest !== '' && !preg_match('~\.[a-z0-9]{2,5}$~i', $rest)) $to .= '/';
+    $qs   = (string)($_SERVER['QUERY_STRING'] ?? '');
+    header('Location: ' . $to . ($qs !== '' ? '?' . $qs : ''), true, 301); exit;
+}
 
 /* 410 Gone: WordPress-in texniki ünvanları, spam yazıların arxivləri (kateqoriya/etiket/müəllif/lent)
    və sındırılmış sayta yeridilmiş 3118 spam yazı — Google onları indeksdən daha tez silir */

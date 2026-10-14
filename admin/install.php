@@ -14,7 +14,7 @@ header('Content-Type: text/html; charset=utf-8');
 $token = (string)cfg('install_token', '');
 if ($token === '' || $token === 'CHANGE_ME_TOKEN' || !hash_equals($token, (string)($_GET['token'] ?? ''))) {
     http_response_code(403);
-    exit('Forbidden: admin/config.php → install_token (CHANGE_ME_TOKEN olmamalıdır)');
+    exit('Forbidden');   // token: admin/config.php → install_token (CHANGE_ME_TOKEN olmamalıdır)
 }
 
 $db = pdo();

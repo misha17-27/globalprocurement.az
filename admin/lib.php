@@ -13,6 +13,17 @@ function pdo(): PDO {
 function cfg(string $k, $default = null) { return site_cfg($k, $default); }
 function redirect(string $to): void { header('Location: ' . $to); exit; }
 
+/**
+ * Saytın faylına mütləq ünvan + versiya: /assets/img/logo.png?v=1712345678
+ * Nisbi "../" yolları panel qeyri-adi ünvanla açılanda qırılırdı, versiya isə
+ * brauzerin / Cloudflare-in köhnə (məs. 404) cavabı göstərməsinin qarşısını alır.
+ */
+function admin_asset(string $rel): string {
+    $rel = ltrim($rel, '/');
+    $f   = dirname(__DIR__) . '/' . $rel;
+    return base_url() . '/' . $rel . (is_file($f) ? '?v=' . filemtime($f) : '');
+}
+
 /* ---------------- sessiya / auth ---------------- */
 function is_https(): bool {
     $h = $_SERVER['HTTPS'] ?? '';
@@ -283,11 +294,11 @@ function layout_top(string $active, string $title): void {
     $unread = unread_count();
     echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<meta name="robots" content="noindex, nofollow"><title>' . e($title) . ' — Global Procurement admin</title>';
-    echo '<link rel="icon" href="../assets/img/favicon.png" type="image/png">';
+    echo '<link rel="icon" href="' . e(admin_asset('assets/img/favicon.png')) . '" type="image/png">';
     echo '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">';
     echo '<style>' . admin_css() . '</style></head><body>';
     echo '<input type="checkbox" id="navtoggle" hidden><div class="wrap">';
-    echo '<aside class="side"><div class="brand"><img src="../assets/img/logo-h-white.png" alt="Global Procurement Group" style="height:40px;width:auto"></div><nav>';
+    echo '<aside class="side"><div class="brand"><img src="' . e(admin_asset('assets/img/logo-h-white.png')) . '" alt="Global Procurement Group" style="height:40px;width:auto"></div><nav>';
     foreach (GROUPS as $glabel => $keys) {
         echo '<div class="navgroup">' . e($glabel) . '</div>';
         foreach ($keys as $key) {
@@ -310,7 +321,7 @@ function layout_top(string $active, string $title): void {
         }
         echo '</span> ';
     }
-    echo '<a class="btn ghost" href="../" target="_blank">Открыть сайт</a> <a class="btn" href="index.php?section=logout">Выйти</a></div></header><div class="body">';
+    echo '<a class="btn ghost" href="' . e(base_url() . '/') . '" target="_blank">Открыть сайт</a> <a class="btn" href="index.php?section=logout">Выйти</a></div></header><div class="body">';
     echo flash_render();
 }
 function layout_bottom(): void {

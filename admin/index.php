@@ -32,9 +32,10 @@ if ($section === 'login') {
         else $err = 'Неверный e-mail или пароль.';
     }
     echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">';
+    echo '<link rel="icon" href="' . e(admin_asset('assets/img/favicon.png')) . '" type="image/png">';
     echo '<title>Вход — Global Procurement</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">';
     echo '<style>' . admin_css() . '</style></head><body><div class="login"><form class="box" method="post">';
-    echo '<div style="text-align:center"><img src="../assets/img/logo.png" alt="Global Procurement Group" style="height:96px;width:auto"></div>';
+    echo '<div style="text-align:center"><img src="' . e(admin_asset('assets/img/logo.png')) . '" alt="Global Procurement Group" width="128" height="96" style="height:96px;width:auto"></div>';
     echo '<h2>Вход в панель</h2><div class="sub">Управление сайтом и каталогом</div>';
     if ($err) echo '<div class="flash" style="background:#b91c1c">' . e($err) . '</div>';
     echo csrf_field() . '<label>E-mail</label><input type="email" name="email" required autofocus><label>Пароль</label><input type="password" name="password" required>';
@@ -356,7 +357,7 @@ $langTabs = function (string $prefix): string {
     foreach (CMS_LANGS as $lc => $lb) $h .= '<button type="button" class="btn sm ' . ($lc === 'az' ? '' : 'ghost') . '" data-ltab="' . $prefix . $lc . '">' . $lb . '</button>';
     return $h . '</div>';
 };
-$siteUrl = function (string $path): string { return '../' . ltrim($path, '/'); };
+$siteUrl = function (string $path): string { return base_url() . '/' . ltrim($path, '/'); };
 
 layout_top($section, SECTIONS[$section][0]);
 
@@ -634,7 +635,7 @@ elseif ($section === 'contacts') {
 /* ---------------- SEO ---------------- */
 elseif ($section === 'seo') {
     echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="save"><h3>SEO страниц (' . strtoupper($L) . ')</h3>';
-    echo '<p class="muted">Для товаров и категорий SEO задаётся в их карточках. Карта сайта: <a href="../sitemap.xml" target="_blank">/sitemap.xml</a></p>';
+    echo '<p class="muted">Для товаров и категорий SEO задаётся в их карточках. Карта сайта: <a href="' . e(base_url() . '/sitemap.xml') . '" target="_blank">/sitemap.xml</a></p>';
     foreach (SEO_PAGES as $k => $lb) {
         echo '<div class="item"><b>' . e($lb) . '</b><label>Title</label><input type="text" name="title[' . $k . ']" value="' . e(txt_get("seo_{$k}_title", $L)) . '">';
         echo '<label>Meta description</label><textarea name="desc[' . $k . ']" style="min-height:70px">' . e(txt_get("seo_{$k}_desc", $L)) . '</textarea></div>';
@@ -663,7 +664,7 @@ elseif ($section === 'images') {
     echo '<div class="panel"><h3>Медиа (' . count($files) . ')</h3><div class="grid-media">';
     foreach ($files as $m) {
         $rel = ltrim(str_replace('\\', '/', substr($m['p'], strlen($root))), '/');
-        echo '<div style="border:1px solid #eef2f7;border-radius:10px;padding:8px;text-align:center"><img src="../assets/img/' . e($rel) . '" loading="lazy" style="width:100%;height:90px;object-fit:contain;background:#f3f6fb;border-radius:6px">';
+        echo '<div style="border:1px solid #eef2f7;border-radius:10px;padding:8px;text-align:center"><img src="' . e(base_url() . '/assets/img/' . $rel) . '" loading="lazy" style="width:100%;height:90px;object-fit:contain;background:#f3f6fb;border-radius:6px">';
         echo '<input type="text" readonly value="' . e($rel) . '" data-copy="1" style="width:100%;font-size:10.5px;margin-top:6px;padding:4px;cursor:pointer"></div>';
     }
     echo '</div></div>';

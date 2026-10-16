@@ -26,7 +26,7 @@ if (count($related) < 4) {
 }
 
 $body = trim((string)$p['body']);
-$desc = $p['meta_desc'] ?: mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags((string)($p['short'] ?: $body)))), 0, 160);
+$desc = $p['meta_desc'] ?: mb_substr(plain_text((string)($p['short'] ?: $body)), 0, 160);
 $canon = site_origin() . url('product/' . $p['slug']);
 $schema = [
     '@context' => 'https://schema.org', '@type' => 'Product',

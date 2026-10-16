@@ -277,6 +277,7 @@ const SECTIONS = [
     'categories'  => ['Категории', '❖'],
     'submissions' => ['Заявки', '✉'],
     'pages'       => ['Страницы', '❐'],
+    'blog'        => ['Блог', '✎'],
     'texts'       => ['Тексты сайта', '¶'],
     'images'      => ['Изображения', '❏'],
     'contacts'    => ['Контакты', '☏'],
@@ -289,7 +290,7 @@ const SECTIONS = [
 const GROUPS = [
     'ОСНОВНОЕ'  => ['overview', 'submissions'],
     'КАТАЛОГ'   => ['products', 'categories'],
-    'КОНТЕНТ'   => ['pages', 'texts', 'images', 'contacts', 'seo'],
+    'КОНТЕНТ'   => ['pages', 'blog', 'texts', 'images', 'contacts', 'seo'],
     'НАСТРОЙКИ' => ['smtp', 'security', 'users', 'profile'],
 ];
 const ADMIN_ONLY = ['users', 'smtp', 'security'];

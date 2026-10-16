@@ -202,6 +202,17 @@ site_header('');
   </div>
 </section>
 
+<!-- BLOQ: son məqalələr -->
+<?php require_once __DIR__ . '/../includes/blog.php'; if ($homePosts = blog_posts(3)): ?>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sh reveal"><div><span class="label"><?= e(t('blog.title')) ?></span><h2><?= e(t('blog.h1')) ?></h2></div>
+      <a href="<?= e(url('blog')) ?>" class="btn btn-white"><?= e(t('blog.all')) ?> →</a></div>
+    <div class="bgrid"><?php foreach ($homePosts as $i => $hp) echo blog_card($hp, $i); ?></div>
+  </div>
+</section>
+<?php endif; ?>
+
 <!-- FAQ -->
 <section class="sec" style="padding-top:0">
   <div class="wrap faq">

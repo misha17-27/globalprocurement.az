@@ -3,6 +3,13 @@
 return [
     'nav.home' => 'Ana səhifə', 'nav.catalog' => 'Kataloq', 'nav.guide' => 'Material bələdçisi',
     'nav.about' => 'Haqqımızda', 'nav.contact' => 'Əlaqə',
+    'nav.blog' => 'Bloq',
+    'blog.title' => 'Bloq', 'blog.h1' => 'Tikinti materialları haqqında bloq',
+    'blog.lead' => 'OSB-3 lövhə, istilik və hidroizolyasiya materiallarının seçimi üzrə praktik məsləhətlər — Bakıda tikinti edənlər üçün.',
+    'blog.meta_title' => 'Bloq: OSB lövhə və izolyasiya seçimi — Bakı',
+    'blog.meta_desc' => 'OSB-3 lövhə, daş yunu, XPS və hidroizolyasiya materiallarının seçimi üzrə məsləhətlər. Bakıda topdan və pərakəndə qiymət üçün sorğu göndərin.',
+    'blog.read' => 'Ətraflı oxu', 'blog.empty' => 'Hələ məqalə yoxdur.', 'blog.more' => 'Digər məqalələr', 'blog.all' => 'Bütün məqalələr',
+    'blog.products' => 'Məqalədəki məhsullar', 'blog.products_label' => 'Aktual qiymətlər',
 
     'btn.send_request' => 'Sorğu göndər', 'btn.details' => 'Ətraflı', 'btn.add_short' => '+ Sorğuya',
     'btn.add' => 'Sorğuya əlavə et', 'btn.wa' => 'WhatsApp ilə sifariş', 'btn.all_products' => 'Bütün məhsullar',

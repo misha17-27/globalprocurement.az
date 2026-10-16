@@ -6,7 +6,7 @@ $pg = $pg ?? page_by_slug((string)($params['slug'] ?? ''));
 if (!$pg) { require __DIR__ . '/404.php'; return; }
 
 $body = trim((string)$pg['body']);
-$desc = $pg['meta_desc'] ?: mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags((string)($pg['lead'] ?: $body)))), 0, 160);
+$desc = $pg['meta_desc'] ?: mb_substr(plain_text((string)($pg['lead'] ?: $body)), 0, 160);
 page_head(['title' => $pg['meta_title'] ?: $pg['title'] . ' — Global Procurement', 'desc' => $desc, 'image' => $pg['image'] ? img($pg['image']) : null]);
 site_header($pg['slug']);
 ?>

@@ -98,6 +98,24 @@ function cms_create_tables(PDO $db): array {
             `meta_desc` TEXT,
             PRIMARY KEY (`page_id`, `lang`)",
 
+        /* Bloq (includes/blog.php) */
+        'posts' => "$pk,
+            `slug` VARCHAR(160) NOT NULL UNIQUE,
+            `image` VARCHAR(255) DEFAULT '',
+            `products` TEXT,
+            `published_at` VARCHAR(20) DEFAULT '',
+            `visible` INT DEFAULT 1,
+            `updated_at` VARCHAR(20) DEFAULT ''",
+
+        'post_i18n' => "`post_id` INT NOT NULL,
+            `lang` VARCHAR(5) NOT NULL,
+            `title` VARCHAR(255) DEFAULT '',
+            `lead` TEXT,
+            `body` TEXT,
+            `meta_title` VARCHAR(255) DEFAULT '',
+            `meta_desc` TEXT,
+            PRIMARY KEY (`post_id`, `lang`)",
+
         /* Admin girişinə uğursuz cəhdlər (IP üzrə limit) */
         'login_attempts' => "$pk, `ip` VARCHAR(64) NOT NULL, `at` INT NOT NULL",
 

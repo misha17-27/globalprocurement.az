@@ -87,7 +87,7 @@ const TEXT_FIELDS = [
         'about_page' => ['Содержание', 'textarea', '## Заголовок · обычная строка — абзац · - пункт списка'],
     ],
 ];
-const SEO_PAGES = ['home' => 'Главная', 'shop' => 'Каталог', 'about' => 'О компании', 'contact' => 'Контакты'];
+const SEO_PAGES = ['home' => 'Главная', 'shop' => 'Каталог', 'about' => 'О компании', 'contact' => 'Контакты', 'blog' => 'Блог'];
 
 /* ================== POST ================== */
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -196,7 +196,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $id = (int)($_POST['id'] ?? 0);
             $tr = (array)($_POST['tr'] ?? []);
             $slug = slugify((string)($_POST['slug'] ?? '')) ?: slugify((string)($tr['az']['title'] ?? ''));
-            $reserved = ['shop', 'product', 'product-category', 'elaqe', 'api', 'admin', 'assets', 'ru', 'az', 'sitemap-xml'];
+            $reserved = ['shop', 'product', 'product-category', 'elaqe', 'api', 'admin', 'assets', 'ru', 'az', 'sitemap-xml', 'blog'];
             if ($slug === '' || in_array($slug, $reserved, true)) { flash('Укажите другой адрес (slug).', 'err'); redirect($back . ($id ? '&edit=' . $id : '&new=1')); }
             $st = $db->prepare('SELECT id FROM pages WHERE slug = ? AND id <> ?'); $st->execute([$slug, $id]);
             if ($st->fetch()) { flash('Такой адрес уже занят.', 'err'); redirect($back . ($id ? '&edit=' . $id : '&new=1')); }
@@ -218,6 +218,56 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $db->prepare('DELETE FROM page_i18n WHERE page_id=?')->execute([(int)$_POST['id']]);
             $db->prepare('DELETE FROM pages WHERE id=?')->execute([(int)$_POST['id']]);
             flash('Страница удалена.'); redirect($back);
+        }
+    }
+
+    /* ---------- BLOQ ---------- */
+    if ($section === 'blog') {
+        require_once ROOT_DIR . '/includes/blog.php';
+        blog_ensure();
+        $back = 'index.php?section=blog';
+        if ($act === 'save') {
+            $id = (int)($_POST['id'] ?? 0);
+            $tr = (array)($_POST['tr'] ?? []);
+            /* Xəta olanda yazılan məqalə itməsin: forma sessiyadan yenidən doldurulur */
+            $fail = function (string $msg) use ($id, $tr, $back): void {
+                $_SESSION['blog_draft'] = ['id' => $id, 'tr' => $tr, 'slug' => (string)($_POST['slug'] ?? ''), 'image' => (string)($_POST['image'] ?? ''),
+                    'published_at' => (string)($_POST['published_at'] ?? ''), 'visible' => isset($_POST['visible']) ? 1 : 0,
+                    'products' => array_values(array_map('strval', (array)($_POST['products'] ?? [])))];
+                flash($msg, 'err'); redirect($back . ($id ? '&edit=' . $id : '&new=1'));
+            };
+            if (trim((string)($tr['az']['title'] ?? '')) === '') $fail('Укажите заголовок на AZ — это основной язык сайта.');
+            $own  = slugify((string)($_POST['slug'] ?? ''));
+            $slug = $own ?: slugify((string)$tr['az']['title']);
+            if ($slug === '') $fail('Укажите адрес (slug) латиницей.');
+            $taken = function (string $sl) use ($db, $id): bool { $st = $db->prepare('SELECT id FROM posts WHERE slug = ? AND id <> ?'); $st->execute([$sl, $id]); return (bool)$st->fetch(); };
+            if ($taken($slug)) {
+                if ($own !== '') $fail('Такой адрес уже занят: ' . $slug);
+                for ($n = 2, $base = $slug; $taken($slug); $n++) $slug = $base . '-' . $n;   // avtomatik adres: -2, -3...
+            }
+            $image = safe_img_path((string)($_POST['image'] ?? ''));
+            if ($up = admin_upload('image_file', 'uploads')) $image = $up;
+            $date = (string)($_POST['published_at'] ?? '');
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) $date = date('Y-m-d');
+            $known = array_column($db->query('SELECT slug FROM products')->fetchAll(), 'slug');
+            $prods = array_values(array_intersect(array_map('strval', (array)($_POST['products'] ?? [])), $known));
+            if (count($prods) > BLOG_MAX_PRODUCTS) flash('Под статьёй показываются первые ' . BLOG_MAX_PRODUCTS . ' товаров из отмеченных.', 'err');
+            $f = [$slug, $image, json_encode($prods), $date, isset($_POST['visible']) ? 1 : 0, date('Y-m-d H:i')];
+            if ($id) $db->prepare('UPDATE posts SET slug=?, image=?, products=?, published_at=?, visible=?, updated_at=? WHERE id=?')->execute([...$f, $id]);
+            else { $db->prepare('INSERT INTO posts (slug, image, products, published_at, visible, updated_at) VALUES (?,?,?,?,?,?)')->execute($f); $id = (int)$db->lastInsertId(); }
+            foreach (CMS_LANGS as $lc => $_) {
+                $t = (array)($tr[$lc] ?? []);
+                $db->prepare('DELETE FROM post_i18n WHERE post_id=? AND lang=?')->execute([$id, $lc]);
+                $db->prepare('INSERT INTO post_i18n (post_id, lang, title, `lead`, body, meta_title, meta_desc) VALUES (?,?,?,?,?,?,?)')
+                   ->execute([$id, $lc, trim((string)($t['title'] ?? '')), trim((string)($t['lead'] ?? '')), sanitize_html((string)($t['body'] ?? '')),
+                              trim((string)($t['meta_title'] ?? '')), trim((string)($t['meta_desc'] ?? ''))]);
+            }
+            flash('Статья сохранена.'); redirect($back . '&edit=' . $id);
+        }
+        if ($act === 'del') {
+            $db->prepare('DELETE FROM post_i18n WHERE post_id=?')->execute([(int)$_POST['id']]);
+            $db->prepare('DELETE FROM posts WHERE id=?')->execute([(int)$_POST['id']]);
+            flash('Статья удалена.'); redirect($back);
         }
     }
 
@@ -593,6 +643,73 @@ elseif ($section === 'pages') {
             echo '<td>' . ((int)$r['visible'] ? '<span class="pill">опубликована</span>' : '<span class="pill gr">скрыта</span>') . '</td>';
             echo '<td class="right" style="white-space:nowrap"><a class="btn sm ghost" href="index.php?section=pages&edit=' . $r['id'] . '">Изменить</a> <a class="btn sm ghost" href="' . e($siteUrl($r['slug'] . '/')) . '" target="_blank">↗</a> ';
             echo '<form method="post" style="display:inline" data-confirm="Удалить страницу?">' . csrf_field() . '<input type="hidden" name="action" value="del"><input type="hidden" name="id" value="' . $r['id'] . '"><button class="btn sm red">✕</button></form></td></tr>';
+        }
+        echo '</table></div></div>';
+    }
+}
+
+/* ---------------- BLOG ---------------- */
+elseif ($section === 'blog') {
+    require_once ROOT_DIR . '/includes/blog.php';
+    blog_ensure();
+    if (isset($_GET['edit']) || isset($_GET['new'])) {
+        $bp = ['id' => 0, 'slug' => '', 'image' => '', 'products' => '[]', 'published_at' => date('Y-m-d'), 'visible' => 1]; $tr = [];
+        if (isset($_GET['edit'])) {
+            $st = $db->prepare('SELECT * FROM posts WHERE id=?'); $st->execute([(int)$_GET['edit']]); $bp = $st->fetch() ?: $bp;
+            $st = $db->prepare('SELECT * FROM post_i18n WHERE post_id=?'); $st->execute([$bp['id']]); foreach ($st as $r) $tr[$r['lang']] = $r;
+        }
+        $draft = $_SESSION['blog_draft'] ?? null; unset($_SESSION['blog_draft']);
+        if (is_array($draft) && (int)$draft['id'] === (int)$bp['id']) {          // saxlanmayan forma (xəta) — yazılanlar qaytarılır
+            foreach (['slug', 'image', 'published_at', 'visible'] as $k) $bp[$k] = $draft[$k];
+            $bp['products'] = json_encode($draft['products']);
+            foreach (CMS_LANGS as $lc => $_) $tr[$lc] = array_map('strval', (array)($draft['tr'][$lc] ?? []));
+        }
+        $chosen = array_map('strval', (array)json_decode((string)$bp['products'], true));
+        echo '<form method="post" enctype="multipart/form-data">' . csrf_field() . '<input type="hidden" name="action" value="save"><input type="hidden" name="id" value="' . (int)$bp['id'] . '">';
+        echo '<div class="panel"><h3>' . ($bp['id'] ? 'Изменить статью' : 'Новая статья') . '</h3>';
+        if ($bp['id']) echo '<p class="muted">Адрес: <a href="' . e($siteUrl('blog/' . $bp['slug'] . '/')) . '" target="_blank">/blog/' . e($bp['slug']) . '/</a> · <a href="' . e($siteUrl('ru/blog/' . $bp['slug'] . '/')) . '" target="_blank">/ru/blog/' . e($bp['slug']) . '/</a></p>';
+        echo $langTabs('b');
+        foreach (CMS_LANGS as $lc => $lb) {
+            $v = function ($k) use ($tr, $lc) { return e($tr[$lc][$k] ?? ''); };
+            echo '<div class="lpane' . ($lc === 'az' ? ' on' : '') . '" data-lpane="b' . $lc . '">';
+            echo '<label>Заголовок (' . $lb . ')' . ($lc === 'az' ? ' *' : '') . '</label><input type="text" name="tr[' . $lc . '][title]" value="' . $v('title') . '">';
+            echo '<label>Анонс (1–2 предложения для списка статей)</label><textarea name="tr[' . $lc . '][lead]" style="min-height:60px">' . $v('lead') . '</textarea>';
+            echo '<label>Текст статьи</label><textarea class="code" data-editor="1" name="tr[' . $lc . '][body]" style="min-height:420px">' . $v('body') . '</textarea>';
+            echo '<p class="muted">Выделите текст и нажмите кнопку на панели. Ссылки на товары: /product/адрес-товара/ (для RU — /ru/product/…). Пустой текст на RU — показывается AZ.</p>';
+            echo '<label>SEO Title <span class="muted" data-len-for="bt' . $lc . '"></span></label><input type="text" id="bt' . $lc . '" data-len="30-65" name="tr[' . $lc . '][meta_title]" value="' . $v('meta_title') . '">';
+            echo '<label>Meta Description <span class="muted" data-len-for="bd' . $lc . '"></span></label><textarea id="bd' . $lc . '" data-len="70-165" name="tr[' . $lc . '][meta_desc]" style="min-height:70px">' . $v('meta_desc') . '</textarea></div>';
+        }
+        echo '</div><div class="panel"><h3>Публикация</h3><div class="row3"><div><label>Адрес (slug)</label><input type="text" name="slug" value="' . e($bp['slug']) . '" placeholder="из заголовка AZ"></div>';
+        echo '<div><label>Дата публикации</label><input type="date" name="published_at" value="' . e(substr((string)$bp['published_at'], 0, 10)) . '"></div>';
+        echo '<div><label>Обложка</label><input type="text" name="image" value="' . e($bp['image']) . '" placeholder="путь внутри assets/img"></div></div>';
+        if ($bp['image']) echo '<div class="gal">' . img_tile($siteUrl('assets/img/' . $bp['image']), '', 'image', 'big') . '</div>';
+        echo '<label>Загрузить обложку</label><input type="file" name="image_file" accept="image/*">';
+        echo '<label style="font-weight:500"><input type="checkbox" name="visible"' . ((int)$bp['visible'] ? ' checked' : '') . '> Опубликована</label></div>';
+        echo '<div class="panel"><h3>Товары под статьёй</h3><p class="muted">Показываются карточками с актуальной ценой и кнопкой «в список запроса» — так статья продаёт. До ' . BLOG_MAX_PRODUCTS . ' товаров: сначала уже выбранные, новые добавляются в конец.</p><div class="chips">';
+        $all = $db->query("SELECT p.slug, COALESCE(NULLIF(i.title, ''), p.slug) title FROM products p LEFT JOIN product_i18n i ON i.product_id = p.id AND i.lang = 'az' ORDER BY p.sort, p.id")->fetchAll();
+        $bySlug = array_column($all, 'title', 'slug');
+        foreach (array_merge(array_values(array_intersect($chosen, array_keys($bySlug))), array_values(array_diff(array_keys($bySlug), $chosen))) as $ps)
+            echo '<label><input type="checkbox" name="products[]" value="' . e($ps) . '"' . (in_array($ps, $chosen, true) ? ' checked' : '') . '> ' . e($bySlug[$ps]) . '</label>';
+        echo '</div></div>';
+        echo '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Сохранить</button><a class="btn ghost" href="index.php?section=blog">Назад к списку</a></div></form>';
+    } else {
+        $rows = [];
+        try {
+            $rows = $db->query("SELECT p.*, a.title, (SELECT LENGTH(b.body) FROM post_i18n b WHERE b.post_id = p.id AND b.lang = 'ru') ru_len
+                FROM posts p LEFT JOIN post_i18n a ON a.post_id = p.id AND a.lang = 'az' ORDER BY p.published_at DESC, p.id DESC")->fetchAll();
+        } catch (Throwable $e) {}
+        echo '<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px"><span class="muted">Статьи открываются по адресу <a href="' . e($siteUrl('blog/')) . '" target="_blank">/blog/</a>. SEO страницы списка — в разделе «SEO».</span><a class="btn" href="index.php?section=blog&new=1">+ Статья</a></div>';
+        echo '<div class="tablewrap"><table><tr><th>Заголовок</th><th>Дата</th><th>RU</th><th>SEO</th><th>Статус</th><th></th></tr>';
+        if (!$rows) echo '<tr><td colspan="6" class="muted">Статей пока нет — нажмите «+ Статья».</td></tr>';
+        foreach ($rows as $r) {
+            $st = $db->prepare("SELECT lang, meta_title, meta_desc FROM post_i18n WHERE post_id = ?"); $st->execute([$r['id']]);
+            $seo = 0; foreach ($st as $x) if (trim((string)$x['meta_title']) !== '' && trim((string)$x['meta_desc']) !== '') $seo++;
+            echo '<tr><td><b>' . e($r['title'] ?: $r['slug']) . '</b><div class="muted">/blog/' . e($r['slug']) . '/</div></td><td class="muted">' . e(blog_date((string)$r['published_at'])) . '</td>';
+            echo '<td>' . ((int)$r['ru_len'] > 0 ? '<span class="pill g">есть</span>' : '<span class="pill gr">нет</span>') . '</td>';
+            echo '<td>' . ($seo >= 2 ? '<span class="pill g">AZ + RU</span>' : '<span class="pill gr">' . $seo . ' / 2</span>') . '</td>';
+            echo '<td>' . ((int)$r['visible'] ? '<span class="pill">опубликована</span>' : '<span class="pill gr">скрыта</span>') . '</td>';
+            echo '<td class="right" style="white-space:nowrap"><a class="btn sm ghost" href="index.php?section=blog&edit=' . $r['id'] . '">Изменить</a> <a class="btn sm ghost" href="' . e($siteUrl('blog/' . $r['slug'] . '/')) . '" target="_blank">↗</a> ';
+            echo '<form method="post" style="display:inline" data-confirm="Удалить статью?">' . csrf_field() . '<input type="hidden" name="action" value="del"><input type="hidden" name="id" value="' . $r['id'] . '"><button class="btn sm red">✕</button></form></td></tr>';
         }
         echo '</table></div></div>';
     }

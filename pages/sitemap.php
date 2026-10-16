@@ -9,6 +9,16 @@ $lastmod = [];
 if (db()) {
     foreach (categories() as $c) $paths['product-category/' . $c['slug']] = '0.8';
     try { foreach (db()->query("SELECT slug FROM pages WHERE visible = 1 AND slug <> 'haqqimizda'") as $pg) $paths[$pg['slug']] = '0.6'; } catch (Throwable $e) {}
+    require_once ROOT_DIR . '/includes/blog.php';
+    if (blog_ensure()) {
+        $paths['blog'] = '0.6';
+        try {
+            foreach (db()->query('SELECT slug, published_at, updated_at FROM posts WHERE visible = 1 ORDER BY published_at DESC, id DESC') as $bp) {
+                $paths['blog/' . $bp['slug']] = '0.6';
+                $lastmod['blog/' . $bp['slug']] = substr((string)($bp['updated_at'] ?: $bp['published_at']), 0, 10) ?: $today;
+            }
+        } catch (Throwable $e) {}
+    }
     foreach (db()->query('SELECT slug, updated_at FROM products WHERE visible = 1 ORDER BY sort, id') as $p) {
         $paths['product/' . $p['slug']] = '0.7';
         $lastmod['product/' . $p['slug']] = substr((string)$p['updated_at'], 0, 10) ?: $today;

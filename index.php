@@ -9,6 +9,7 @@
  *   /product/<slug>/           məhsul
  *   /haqqimizda/               haqqımızda
  *   /elaqe/                    əlaqə
+ *   /blog/, /blog/<slug>/      bloq (admin → «Блог»)
  *   /<slug>/                   mətn səhifəsi (admin → «Страницы»), məs. /welder-qaynag-avadanliqlari/
  *   /ru/...                    rus versiyası (eyni yollar)
  *   /api/request               sorğu göndərmə (POST, JSON)
@@ -83,7 +84,7 @@ $gone = function (): void {
 };
 if (preg_match('~^(wp-admin|wp-includes|wp-json|wp-login\.php|xmlrpc\.php|wp-content/(themes|plugins|cache)|feed|comments/feed|category|tag|author|\d{4}/\d{2})(/|$)~', $route)) $gone();
 if (preg_match('~^page/\d+$~', $route)) { header('Location: ' . url(''), true, 301); exit; }
-if (preg_match('~^[a-z0-9%-]+$~', $route) && !in_array($route, ['shop', 'haqqimizda', 'elaqe'], true)) {
+if (preg_match('~^[a-z0-9%-]+$~', $route) && !in_array($route, ['shop', 'haqqimizda', 'elaqe', 'blog'], true)) {
     $f = __DIR__ . '/includes/gone.txt';
     if (is_file($f) && in_array($route, file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES), true)) $gone();
 }
@@ -105,6 +106,8 @@ elseif (preg_match('~^product-category/(?:[a-z0-9-]+/)*([a-z0-9-]+)$~', $route, 
 elseif (preg_match('~^product/([a-z0-9-]+)$~', $route, $m))  { $page = 'product'; $params['slug'] = $m[1]; }
 elseif ($route === 'haqqimizda')                     $page = 'about';
 elseif ($route === 'elaqe')                          $page = 'contact';
+elseif ($route === 'blog')                           $page = 'blog';
+elseif (preg_match('~^blog/([a-z0-9-]+)$~', $route, $m))     { $page = 'post'; $params['slug'] = $m[1]; }
 elseif (preg_match('~^[a-z0-9-]+$~', $route) && page_by_slug($route)) { $page = 'page'; $params['slug'] = $route; }
 else                                                 $page = '404';
 

@@ -1,16 +1,16 @@
 <?php
 /*
  * Ortaq şablon hissələri: <head>, header, footer, məhsul kartı, sorğu siyahısı.
- * $meta = ['title' => .., 'desc' => .., 'image' => .., 'noindex' => bool, 'schema' => array]
+ * $meta = ['title' => .., 'desc' => .., 'image' => .., 'noindex' => bool, 'schema' => array, 'og_type' => 'article']
  */
 
 const WA_SVG = '<svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.7-.1 1.3z"/></svg>';
 const CART_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>';
 
-/** Cari səhifənin başqa dildəki ünvanı */
+/** Cari səhifənin başqa dildəki ünvanı — HTML-ə hazır (tam escape olunub; yol 404-də istifadəçidən gəlir) */
 function lang_url(string $l): string {
     $qs = (string)($_SERVER['QUERY_STRING'] ?? '');
-    return url((string)($GLOBALS['ROUTE'] ?? ''), $l) . ($qs !== '' ? '?' . e($qs) : '');
+    return e(url((string)($GLOBALS['ROUTE'] ?? ''), $l) . ($qs !== '' ? '?' . $qs : ''));
 }
 
 function page_head(array $meta): void {
@@ -33,7 +33,7 @@ function page_head(array $meta): void {
 <link rel="canonical" href="<?= e($canon) ?>">
 <?php foreach (LANGS as $code => $_): ?><link rel="alternate" hreflang="<?= $code ?>" href="<?= e(site_origin() . url((string)($GLOBALS['ROUTE'] ?? ''), $code)) ?>">
 <?php endforeach; ?>
-<meta property="og:type" content="website">
+<meta property="og:type" content="<?= e($meta['og_type'] ?? 'website') ?>">
 <meta property="og:title" content="<?= e($title) ?>">
 <meta property="og:description" content="<?= e($desc) ?>">
 <meta property="og:url" content="<?= e($canon) ?>">
@@ -60,7 +60,7 @@ function site_header(string $active = ''): void {
     $cats = categories();
     $nav = [
         'shop' => t('nav.catalog'), '#beledci' => t('nav.guide'),
-        'product-category/kronospan-osb-lovh-l-ri' => 'OSB', 'haqqimizda' => t('nav.about'), 'elaqe' => t('nav.contact'),
+        'product-category/kronospan-osb-lovh-l-ri' => 'OSB', 'blog' => t('nav.blog'), 'haqqimizda' => t('nav.about'), 'elaqe' => t('nav.contact'),
     ];
     $announce = text('announce');
     ?>
@@ -157,6 +157,7 @@ function site_footer(): void {
         <li><a href="<?= e(url('haqqimizda')) ?>"><?= e(t('nav.about')) ?></a></li>
         <?php foreach (menu_pages() as $mp): ?><li><a href="<?= e(url($mp['slug'])) ?>"><?= e($mp['title']) ?></a></li><?php endforeach; ?>
         <li><a href="<?= e(url('shop')) ?>"><?= e(t('nav.catalog')) ?></a></li>
+        <li><a href="<?= e(url('blog')) ?>"><?= e(t('nav.blog')) ?></a></li>
         <li><a href="<?= e(url('') . '#beledci') ?>"><?= e(t('nav.guide')) ?></a></li>
         <li><a href="<?= e(url('elaqe')) ?>"><?= e(t('nav.contact')) ?></a></li>
       </ul></div>

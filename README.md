@@ -38,7 +38,7 @@ includes/
   request.php        POST /api/request — sorğu: baza + e-poçt + WhatsApp linki
                      (saytdakı WhatsApp düymələrinə klik də «Заявки»-yə yazılır, source = whatsapp)
   lang/az.php ru.php interfeys sətirləri
-pages/               home, shop, product, page (mətn səhifələri), about, contact, 404, sitemap
+pages/               home, shop, product, page (mətn səhifələri), blog + post (bloq), about, contact, 404, sitemap
 admin/               panel (index.php), lib.php, schema.php, seed.php, import.php, install.php
 assets/              css/site.css, js/site.js, img/ (products/ — idxal olunmuş şəkillər)
 tools/               wpdump.py + import-local.php — SQL dump-dan lokal idxal
@@ -69,6 +69,7 @@ Köhnə WordPress ünvanları 301 ilə yönləndirilir: `/contact-us/ → /elaqe
 | Товары | ad / təsvir / xüsusiyyətlər / SEO (AZ, RU), şəkil + qalereya, qiymət, variantlar, kateqoriyalar, «ana səhifədə» |
 | Категории | ad, təsvir, SEO, şəkil, sıra |
 | Страницы | Haqqımızda, WELDER, Şirkət haqqında və yeni səhifələr |
+| Блог | məqalələr AZ/RU (`/blog/`, `/ru/blog/`): vizual redaktor, SEO title/description, örtük şəkli, altında satış üçün məhsul kartları; cədvəllər və 3 başlanğıc məqalə ilk açılışda avtomatik yaranır (`includes/blog.php`, `admin/blog-pack.php`) |
 | Тексты сайта | ana səhifənin bütün blokları, FAQ, rəqəmlər (AZ / RU) |
 | Изображения | yükləmə və media kitabxanası |
 | Контакты | telefon, **WhatsApp nömrəsi (sorğular buraya)**, e-poçt, ünvan, xəritə |

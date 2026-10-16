@@ -95,8 +95,9 @@ function ip_blocked(): int {
 function login_blocked(): int {
     boot_session();
     if ($w = ip_blocked()) return $w;
-    $now  = time();
-    $hits = array_values(array_filter((array)($_SESSION['login_fails'] ?? []), function ($t) use ($now) { return is_int($t) && $t > $now - LOGIN_WINDOW; }));
+    $now   = time();
+    $since = max($now - LOGIN_WINDOW, (int)kv_get('login_reset_at', '0'));   // admin «Снять блокировки» / «Задать пароль» basıbsa, əvvəlki cəhdlər sayılmır
+    $hits  = array_values(array_filter((array)($_SESSION['login_fails'] ?? []), function ($t) use ($since) { return is_int($t) && $t > $since; }));
     $_SESSION['login_fails'] = $hits;
     if (count($hits) < LOGIN_MAX_TRIES) return 0;
     return max(1, (int)(min($hits) + LOGIN_WINDOW - $now));
@@ -115,7 +116,9 @@ function attempt_login(string $email, string $pass, ?string &$why = null): bool 
     $st = pdo()->prepare('SELECT * FROM admins WHERE email = ? LIMIT 1');
     $st->execute([trim($email)]);
     $u = $st->fetch();
-    $hash = $u['pass_hash'] ?? '$2y$12$' . str_repeat('.', 53);
+    // Mövcud olmayan e-poçt üçün də eyni "çəkili" yoxlama — cavab vaxtından hesabın varlığı bilinməsin
+    $cost = defined('PASSWORD_BCRYPT_DEFAULT_COST') ? (int)PASSWORD_BCRYPT_DEFAULT_COST : 10;
+    $hash = $u['pass_hash'] ?? sprintf('$2y$%02d$%s', $cost, str_repeat('.', 53));
     $ok   = password_verify($pass, $hash);
     if ($u && $ok && (int)($u['active'] ?? 1) === 1) {
         boot_session();
@@ -126,6 +129,9 @@ function attempt_login(string $email, string $pass, ?string &$why = null): bool 
         $_SESSION['seen']  = time();
         $_SESSION['admin'] = ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'] ?? '', 'role' => $u['role'] ?? 'editor'];
         try { pdo()->prepare('UPDATE admins SET last_login=? WHERE id=?')->execute([date('Y-m-d H:i'), (int)$u['id']]); } catch (Throwable $e) {}
+        if (password_needs_rehash((string)$u['pass_hash'], PASSWORD_DEFAULT)) {
+            try { pdo()->prepare('UPDATE admins SET pass_hash=? WHERE id=?')->execute([password_hash($pass, PASSWORD_DEFAULT), (int)$u['id']]); } catch (Throwable $e) {}
+        }
         $why = '';
         return true;
     }
@@ -379,7 +385,7 @@ main{flex:1;min-width:0}
 .scrim{display:none}
 .body{padding:24px 26px 60px;max-width:1180px}
 .flash{color:#fff;padding:12px 16px;border-radius:10px;margin-bottom:14px;font-weight:600;font-size:14px}
-.toast{position:fixed;top:18px;left:50%;z-index:60;max-width:min(560px,calc(100vw - 32px));margin:0;transform:translateX(-50%);box-shadow:0 12px 32px rgba(15,23,42,.28);transition:opacity .35s,transform .35s}
+.toast{position:fixed;top:18px;left:50%;z-index:60;width:max-content;max-width:min(560px,calc(100vw - 32px));margin:0;transform:translateX(-50%);box-shadow:0 12px 32px rgba(15,23,42,.28);transition:opacity .35s,transform .35s}
 .toast.out{opacity:0;transform:translate(-50%,-10px)}
 .btn{display:inline-block;background:#1f8ef1;color:#fff;border:0;padding:10px 18px;border-radius:24px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;line-height:1.3}
 .btn:hover{background:#1673cc}

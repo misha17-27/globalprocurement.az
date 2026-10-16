@@ -266,7 +266,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if ($act === 'read')        $db->prepare('UPDATE submissions SET is_read=1 WHERE id=?')->execute([(int)$_POST['id']]);
         elseif ($act === 'del')     { $db->prepare('DELETE FROM submissions WHERE id=?')->execute([(int)$_POST['id']]); flash('Заявка удалена.'); }
         elseif ($act === 'allread') { $db->exec('UPDATE submissions SET is_read=1'); flash('Все отмечены прочитанными.'); }
-        elseif ($act === 'clearlog') { @unlink(ROOT_DIR . '/storage/requests.log'); flash('Журнал очищен.'); }
+        elseif ($act === 'clearlog') {
+            /* Yalnız göstərilən hissə silinir: admin baxanda yeni əlavə olunan sorğular qalır (yazan da LOCK_EX işlədir) */
+            $f = ROOT_DIR . '/storage/requests.log';
+            $seen = max(0, (int)($_POST['logsize'] ?? 0));
+            if ($seen > 0 && is_file($f) && ($h = @fopen($f, 'c+'))) {
+                flock($h, LOCK_EX);
+                $rest = (string)substr((string)stream_get_contents($h), $seen);
+                ftruncate($h, 0); rewind($h);
+                if ($rest !== '') fwrite($h, $rest);
+                fflush($h); flock($h, LOCK_UN); fclose($h);
+                flash($rest === '' ? 'Журнал очищен.' : 'Показанные записи удалены. Пока вы смотрели, пришли новые — они остались в журнале.');
+            }
+        }
         $src = (string)($_GET['src'] ?? '');
         redirect('index.php?section=submissions' . (in_array($src, ['forms', 'whatsapp'], true) ? '&src=' . $src : ''));
     }
@@ -338,11 +350,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 $db->prepare('UPDATE admins SET pass_hash=?, active=1 WHERE id=?')->execute([password_hash($np, PASSWORD_DEFAULT), (int)$_POST['id']]);
                 ip_attempts_table();
                 $db->exec('DELETE FROM login_attempts');   // köhnə uğursuz cəhdlər yeni parolla girişə mane olmasın
+                kv_set('login_reset_at', (string)time());  // brauzer sessiyasındakı sayğac da sıfırlanır (login_blocked)
                 flash('Новый пароль задан для ' . $u['email'] . '. Учётная запись включена, блокировки входа сняты.');
             }
         } elseif ($act === 'unblock') {
             ip_attempts_table();
             $db->exec('DELETE FROM login_attempts');
+            kv_set('login_reset_at', (string)time());
             flash('Блокировки входа сняты.');
         } elseif ($act === 'toggle' && (int)$_POST['id'] !== $me) {
             $db->prepare('UPDATE admins SET active = 1 - active WHERE id=?')->execute([(int)$_POST['id']]);
@@ -354,6 +368,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 }
 
 /* ================== GET (görünüş) ================== */
+/* Bazaya yazılmayan sorğular faylının tam halı (yalnız daxil olmuş admin üçün) */
+if ($section === 'submissions' && ($_GET['log'] ?? '') === 'download') {
+    $f = ROOT_DIR . '/storage/requests.log';
+    if (!is_file($f)) redirect('index.php?section=submissions');
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Content-Disposition: attachment; filename="requests-' . date('Ymd-His') . '.log"');
+    header('X-Content-Type-Options: nosniff');
+    readfile($f);
+    exit;
+}
 $count = function (string $sql) use ($db): int { try { return (int)$db->query($sql)->fetch()['c']; } catch (Throwable $e) { return 0; } };
 $catList = function () use ($db): array {
     return $db->query("SELECT c.*, COALESCE(NULLIF(a.name,''), c.slug) name,
@@ -583,12 +607,17 @@ elseif ($section === 'submissions') {
     $rows = $db->query('SELECT * FROM submissions' . $FILTERS[$src][1] . ' ORDER BY id DESC LIMIT 500')->fetchAll();
 
     $logFile = ROOT_DIR . '/storage/requests.log';
-    if (is_file($logFile) && filesize($logFile) > 0) {
-        $size = (int)filesize($logFile);
+    clearstatcache(true, $logFile);
+    if (is_file($logFile) && ($size = (int)filesize($logFile)) > 0) {
+        $max = 200000;
+        $txt = (string)file_get_contents($logFile, false, null, max(0, $size - $max));
+        if ($size > $max && ($p = strpos($txt, "\n" . str_repeat('=', 60) . "\n")) !== false) $txt = (string)substr($txt, $p + 62);   // ilk yarımçıq qeyd atılır
         echo '<div class="panel" style="border-color:#fca5a5;background:#fff5f5"><h3>⚠ Заявки, которые не удалось записать в базу</h3>'
-           . '<p class="muted">Сайт сохранил их в файл <code>storage/requests.log</code>, чтобы они не потерялись. Обработайте их и очистите журнал.</p>'
-           . '<div class="log">' . e((string)file_get_contents($logFile, false, null, max(0, $size - 40000))) . '</div>'
-           . '<form method="post" style="margin-top:12px" data-confirm="Очистить журнал? Записи из него будут удалены.">' . csrf_field() . '<input type="hidden" name="action" value="clearlog"><button class="btn ghost sm">Очистить журнал</button></form></div>';
+           . '<p class="muted">Сайт сохранил их в файл <code>storage/requests.log</code>, чтобы они не потерялись. Обработайте их и очистите журнал.'
+           . ($size > $max ? ' Показаны последние записи (' . round($max / 1024) . ' из ' . round($size / 1024) . ' КБ).' : '') . '</p>'
+           . '<div class="log">' . htmlspecialchars($txt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+           . '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><a class="btn ghost sm" href="index.php?section=submissions&amp;log=download">Скачать весь журнал</a>'
+           . '<form method="post" data-confirm="' . ($size > $max ? 'Очистить журнал? Будут удалены все записи до этого момента, включая более старые, которые не показаны (сначала скачайте журнал).' : 'Очистить журнал? Показанные записи будут удалены.') . '">' . csrf_field() . '<input type="hidden" name="action" value="clearlog"><input type="hidden" name="logsize" value="' . $size . '"><button class="btn ghost sm">Очистить журнал</button></form></div></div>';
     }
 
     echo '<div class="panel"><div class="filters">';
@@ -757,8 +786,8 @@ elseif ($section === 'users') {
     $blocked = 0;
     try { $st = $db->prepare('SELECT COUNT(DISTINCT ip) c FROM login_attempts WHERE at > ?'); $st->execute([time() - LOGIN_WINDOW]); $blocked = (int)$st->fetch()['c']; } catch (Throwable $e) {}
     echo '<form method="post" class="panel">' . csrf_field() . '<input type="hidden" name="action" value="unblock"><h3>Блокировки входа</h3>'
-       . '<p class="muted">После 10 неверных паролей с одного IP вход закрывается на 15 минут. Сейчас IP с неудачными попытками: <b>' . $blocked . '</b>.</p>'
-       . '<button class="btn ghost"' . ($blocked ? '' : ' disabled') . '>Снять блокировки</button></form>';
+       . '<p class="muted">После 6 неверных паролей в одном браузере или 10 с одного IP вход закрывается на 15 минут. Сейчас IP с неудачными попытками: <b>' . $blocked . '</b>. Кнопка и «Задать пароль» снимают обе блокировки.</p>'
+       . '<button class="btn ghost">Снять блокировки</button></form>';
     echo '<form method="post" class="panel" autocomplete="off">' . csrf_field() . '<input type="hidden" name="action" value="add"><h3>Добавить пользователя</h3>';
     echo '<div class="row"><div><label>Имя</label><input type="text" name="name" autocomplete="off"></div><div><label>E-mail (будет логином)</label><input type="email" name="email" required autocomplete="off" spellcheck="false"></div></div>';
     echo '<div class="row"><div><label>Пароль (мин. 10 символов)</label><input type="password" name="pass" required minlength="10" autocomplete="new-password"></div><div><label>Роль</label><select name="role"><option value="editor">Редактор — товары, тексты, заявки</option><option value="admin">Администратор — всё</option></select></div></div>';

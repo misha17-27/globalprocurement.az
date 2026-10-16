@@ -44,20 +44,29 @@ $clean = function ($v, int $max, bool $multi = false): string {
 
 /* Məhsullar: yalnız id-yə etibar edirik, adları bazadan götürürük */
 $resolveItems = function ($raw) use ($clean): array {
-    $items = [];
+    // Baza əlçatmazdırsa sorğu itməsin: məhsul id/miqdar/variant ilə qalır (ad "#id"), e-poçt və requests.log-a düşür
+    $items = []; $pdo = null; $st = null;
+    try { $pdo = db(); } catch (Throwable $e) {}
     foreach (array_slice(is_array($raw) ? $raw : [], 0, 50) as $it) {
         $id = is_array($it) ? (int)($it['id'] ?? 0) : 0;
         if ($id <= 0) continue;
-        $st = db()->prepare('SELECT p.slug, COALESCE(NULLIF(i.title, \'\'), a.title, p.slug) title FROM products p
-            LEFT JOIN product_i18n i ON i.product_id = p.id AND i.lang = ? LEFT JOIN product_i18n a ON a.product_id = p.id AND a.lang = ?
-            WHERE p.id = ? LIMIT 1');
-        $st->execute([lang(), DEFAULT_LANG, $id]);
-        if (!($p = $st->fetch())) continue;
-        $items[] = [
-            'id' => $id, 'slug' => $p['slug'], 'title' => $p['title'],
-            'qty' => max(1, min(100000, (int)($it['qty'] ?? 1))),
-            'opt' => $clean($it['opt'] ?? '', 60),
-        ];
+        $row = ['id' => $id, 'slug' => '', 'title' => '#' . $id,
+                'qty' => max(1, min(100000, (int)($it['qty'] ?? 1))), 'opt' => $clean($it['opt'] ?? '', 60)];
+        if ($pdo) {
+            try {
+                $st = $st ?: $pdo->prepare('SELECT p.slug, COALESCE(NULLIF(i.title, \'\'), a.title, p.slug) title FROM products p
+                    LEFT JOIN product_i18n i ON i.product_id = p.id AND i.lang = ? LEFT JOIN product_i18n a ON a.product_id = p.id AND a.lang = ?
+                    WHERE p.id = ? LIMIT 1');
+                $st->execute([lang(), DEFAULT_LANG, $id]);
+                $p = $st->fetch();
+                $st->closeCursor();
+                if (!$p) continue;                                  // belə məhsul yoxdur
+                $row['slug'] = $p['slug']; $row['title'] = $p['title'];
+            } catch (Throwable $e) {
+                error_log('api/request items: ' . $e->getMessage());
+            }
+        }
+        $items[] = $row;
     }
     return $items;
 };

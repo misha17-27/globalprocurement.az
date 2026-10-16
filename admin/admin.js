@@ -215,6 +215,8 @@
         var name = a.name.toLowerCase();
         if (tag === 'A' && name === 'href') { var u = safeUrl(a.value); if (u) c.setAttribute('href', u); else c.removeAttribute('href'); return; }
         if (tag === 'IMG' && (name === 'src' || name === 'alt')) { if (name === 'src' && !safeUrl(a.value)) c.removeAttribute('src'); return; }
+        if (tag === 'IMG' && (name === 'width' || name === 'height') && /^\d{1,4}$/.test(a.value)) return;   // serverdə də saxlanılır
+        if (tag === 'A' && name === 'title') return;
         if ((tag === 'TD' || tag === 'TH') && (name === 'colspan' || name === 'rowspan')) return;
         c.removeAttribute(a.name);
       });
@@ -253,13 +255,16 @@
     wrap.appendChild(bar); wrap.appendChild(area); wrap.appendChild(ta);
     area.innerHTML = cleanHTML(ta.value);   // DOMParser-dəki sənəd "ölüdür" — təmizlənməmiş HTML canlı səhifəyə düşmür
 
-    var sync = function () { if (!wrap.classList.contains('source')) ta.value = area.innerHTML.replace(/<p><br><\/p>$/, ''); };
+    // Mətnə toxunulmayıbsa textarea-dakı orijinal HTML olduğu kimi saxlanılır (heç nə "təmizlənmir")
+    var dirty = false;
+    var sync = function () { if (dirty && !wrap.classList.contains('source')) ta.value = area.innerHTML.replace(/<p><br><\/p>$/, ''); };
     var cmd = function (name, val) {
       area.focus();
       try { document.execCommand('styleWithCSS', false, false); document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
       document.execCommand(name, false, val);
-      sync(); refresh();
+      dirty = true; sync(); refresh();
     };
+    ta.addEventListener('input', function () { dirty = true; });
 
     BUTTONS.forEach(function (b) {
       if (b === '|') { var s = document.createElement('span'); s.className = 'sep'; bar.appendChild(s); return; }
@@ -284,7 +289,7 @@
           cmd('createLink', url);
         }
         else if (c === 'src') {
-          if (wrap.classList.contains('source')) { area.innerHTML = cleanHTML(ta.value); wrap.classList.remove('source'); sync(); area.focus(); }
+          if (wrap.classList.contains('source')) { if (dirty) area.innerHTML = cleanHTML(ta.value); wrap.classList.remove('source'); sync(); area.focus(); }
           else { sync(); wrap.classList.add('source'); ta.focus(); }
           btn.classList.toggle('on', wrap.classList.contains('source'));
         }
@@ -310,7 +315,7 @@
     };
     document.addEventListener('selectionchange', refresh);
     area.addEventListener('keyup', refresh);
-    area.addEventListener('input', sync);
+    area.addEventListener('input', function () { dirty = true; sync(); });
     area.addEventListener('blur', sync);
 
     /* Yapışdırma: HTML təmizlənir, sadə mətn abzaslara bölünür */
@@ -320,7 +325,7 @@
       var html = cd.getData('text/html'), txt = cd.getData('text/plain');
       var out = html ? cleanHTML(html) : textToHTML(txt || '');
       if (out) document.execCommand('insertHTML', false, out);
-      sync();
+      dirty = true; sync();
     });
     /* Enter boş sahədə <div> yox, <p> yaratsın */
     area.addEventListener('focus', function () {
@@ -330,6 +335,7 @@
 
     var form = ta.form;
     if (form) form.addEventListener('submit', function () {
+      if (!dirty) return;
       if (wrap.classList.contains('source')) area.innerHTML = cleanHTML(ta.value);
       ta.value = cleanHTML(area.innerHTML);
     });

@@ -412,7 +412,7 @@ textarea.code{font-family:ui-monospace,Consolas,monospace;font-size:13px;min-hei
 .right{text-align:right}
 .item{border:1px solid #eef2f7;border-radius:12px;padding:16px 18px;margin-bottom:14px;background:#fbfcfe}
 .pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;background:#e6f2fe;color:#1673cc;font-weight:700}
-.pill.g{background:#eef7e3;color:#4d7a1f}.pill.gr{background:#eef2f7;color:#5b6f86}
+.pill.g{background:#eef7e3;color:#4d7a1f}.pill.gr{background:#eef2f7;color:#5b6f86}.pill.wa{background:#e3f8ec;color:#11804a}
 .grid-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
 .thumb{width:56px;height:56px;object-fit:contain;border-radius:8px;background:#f3f6fb;border:1px solid #e2e8f2}
 .ltabs{display:flex;gap:4px;margin:18px 0 0;border-bottom:1px solid #e2e8f2}

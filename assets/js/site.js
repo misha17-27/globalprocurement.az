@@ -298,6 +298,24 @@
     });
   });
 
+  /* WhatsApp düymələri: keçid admin → «Заявки»-yə də yazılır (forma sonrası #doneWa artıq yazılıb) */
+  var waLog = function (e) {
+    if (e.type === 'auxclick' && e.button !== 1) return;
+    var a = e.target.closest && e.target.closest('a[href*="wa.me/"]');
+    if (!a || a.id === 'doneWa' || !window.fetch) return;
+    var text = '', st = $('[name=stamp]'), items = [];
+    try { text = new URL(a.href).searchParams.get('text') || ''; } catch (x) {}
+    if (a.id === 'waBtn' && cur) { var q = $('#qty'), o = $('#opt'); items.push({ id: cur.id, qty: q ? q.value : 1, opt: o ? o.value : '' }); }
+    try {
+      fetch(D.api, {
+        method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'wa', lang: D.lang, page: location.pathname, stamp: st ? st.value : '', text: text.slice(0, 1000), items: items })
+      }).catch(function () {});
+    } catch (x) {}
+  };
+  document.addEventListener('click', waLog);
+  document.addEventListener('auxclick', waLog);
+
   /* ---------- OSB kalkulyatoru ---------- */
   var ct = $('#ct'), ca = $('#ca'), cn = $('#cn'), cAdd = $('#cAdd');
   if (ct && ca && cn) {

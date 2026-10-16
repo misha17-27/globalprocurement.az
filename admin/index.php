@@ -266,7 +266,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if ($act === 'read')        $db->prepare('UPDATE submissions SET is_read=1 WHERE id=?')->execute([(int)$_POST['id']]);
         elseif ($act === 'del')     { $db->prepare('DELETE FROM submissions WHERE id=?')->execute([(int)$_POST['id']]); flash('Заявка удалена.'); }
         elseif ($act === 'allread') { $db->exec('UPDATE submissions SET is_read=1'); flash('Все отмечены прочитанными.'); }
-        redirect('index.php?section=submissions');
+        elseif ($act === 'clearlog') { @unlink(ROOT_DIR . '/storage/requests.log'); flash('Журнал очищен.'); }
+        $src = (string)($_GET['src'] ?? '');
+        redirect('index.php?section=submissions' . (in_array($src, ['forms', 'whatsapp'], true) ? '&src=' . $src : ''));
     }
 
     /* ---------- ŞƏKİLLƏR ---------- */
@@ -381,7 +383,8 @@ if ($section === 'overview') {
     if (!$rows) echo '<tr><td colspan="4" class="muted">Заявок пока нет.</td></tr>';
     foreach ($rows as $r) {
         $items = (array)json_decode((string)$r['items'], true);
-        echo '<tr><td class="muted">' . e($r['created_at']) . '</td><td>' . e($r['name']) . '</td><td>' . e($r['phone']) . '</td><td>' . ($items ? count($items) . ' поз.' : '<span class="muted">общий запрос</span>') . '</td></tr>';
+        $who = ($r['source'] ?? '') === 'whatsapp' ? '<span class="pill wa">WhatsApp</span>' : e($r['name']);
+        echo '<tr><td class="muted">' . e($r['created_at']) . '</td><td>' . $who . '</td><td>' . e($r['phone']) . '</td><td>' . ($items ? count($items) . ' поз.' : '<span class="muted">общий запрос</span>') . '</td></tr>';
     }
     echo '</table></div></div>';
 
@@ -573,19 +576,40 @@ elseif ($section === 'pages') {
 
 /* ---------------- SUBMISSIONS ---------------- */
 elseif ($section === 'submissions') {
-    $rows = $db->query('SELECT * FROM submissions ORDER BY id DESC LIMIT 500')->fetchAll();
-    echo '<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap">';
-    echo '<div class="muted">Всего: ' . count($rows) . ', новых: ' . unread_count() . '. Заявки приходят на почту <b>' . e(kv_get('mail_to')) . '</b> и открываются у клиента в WhatsApp.</div>';
+    /* Mənbə: cart — sorğu siyahısı, form — forma, whatsapp — saytdakı WhatsApp düyməsi (əlaqə məlumatı yoxdur) */
+    $FILTERS = ['' => ['Все', ''], 'forms' => ['Формы и список запроса', " WHERE source <> 'whatsapp'"], 'whatsapp' => ['WhatsApp', " WHERE source = 'whatsapp'"]];
+    $src = (string)($_GET['src'] ?? '');
+    if (!isset($FILTERS[$src])) $src = '';
+    $rows = $db->query('SELECT * FROM submissions' . $FILTERS[$src][1] . ' ORDER BY id DESC LIMIT 500')->fetchAll();
+
+    $logFile = ROOT_DIR . '/storage/requests.log';
+    if (is_file($logFile) && filesize($logFile) > 0) {
+        $size = (int)filesize($logFile);
+        echo '<div class="panel" style="border-color:#fca5a5;background:#fff5f5"><h3>⚠ Заявки, которые не удалось записать в базу</h3>'
+           . '<p class="muted">Сайт сохранил их в файл <code>storage/requests.log</code>, чтобы они не потерялись. Обработайте их и очистите журнал.</p>'
+           . '<div class="log">' . e((string)file_get_contents($logFile, false, null, max(0, $size - 40000))) . '</div>'
+           . '<form method="post" style="margin-top:12px" data-confirm="Очистить журнал? Записи из него будут удалены.">' . csrf_field() . '<input type="hidden" name="action" value="clearlog"><button class="btn ghost sm">Очистить журнал</button></form></div>';
+    }
+
+    echo '<div class="panel"><div class="filters">';
+    foreach ($FILTERS as $k => [$lb, $w]) {
+        echo '<a class="btn sm' . ($k === $src ? '' : ' ghost') . '" href="index.php?section=submissions' . ($k !== '' ? '&src=' . $k : '') . '">' . e($lb) . ' · ' . $count('SELECT COUNT(*) c FROM submissions' . $w) . '</a>';
+    }
+    echo '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap">';
+    echo '<div class="muted">Новых: ' . unread_count() . '. Заявки с форм приходят и на почту <b>' . e(kv_get('mail_to')) . '</b>. '
+       . '<span class="pill wa">WhatsApp</span> — клиент нажал кнопку WhatsApp на сайте и перешёл в чат: имени и телефона здесь нет, переписка — в вашем WhatsApp.</div>';
     if (unread_count()) echo '<form method="post">' . csrf_field() . '<input type="hidden" name="action" value="allread"><button class="btn ghost sm">Отметить все прочитанными</button></form>';
     echo '</div>';
     if (!$rows) echo '<p class="muted">Заявок пока нет.</p>';
     foreach ($rows as $r) {
         $items = (array)json_decode((string)$r['items'], true);
+        $wa    = ($r['source'] ?? '') === 'whatsapp';
         $phone = preg_replace('/\D/', '', (string)$r['phone']);
         if (strlen($phone) === 9 || (strlen($phone) === 10 && $phone[0] === '0')) $phone = '994' . ltrim($phone, '0');
+        $kind  = $wa ? '<span class="pill wa">WhatsApp</span>' : '<span class="pill">' . (($r['source'] ?? '') === 'cart' ? 'Список запроса' : 'Форма') . '</span>';
         echo '<div class="item"' . ((int)$r['is_read'] ? '' : ' style="background:#f3faea;border-color:#cfe7b4"') . '>';
-        echo '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><b>#' . $r['id'] . ' · ' . e($r['name']) . '</b> <span class="muted">' . e($r['created_at']) . ' · ' . strtoupper(e($r['lang'])) . '</span>'
-           . ((int)$r['mailed'] ? ' <span class="pill g">письмо отправлено</span>' : ' <span class="pill gr">письмо не ушло</span>') . '</div>';
+        echo '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><b>#' . $r['id'] . ' · ' . ($wa ? 'Переход в WhatsApp' : e($r['name'])) . '</b> <span class="muted">' . e($r['created_at']) . ' · ' . strtoupper(e($r['lang'])) . '</span> ' . $kind
+           . ($wa ? '' : ((int)$r['mailed'] ? ' <span class="pill g">письмо отправлено</span>' : ' <span class="pill gr">письмо не ушло</span>')) . '</div>';
         echo '<div style="white-space:nowrap">';
         if ($phone !== '') echo '<a class="btn sm green" href="https://wa.me/' . e($phone) . '" target="_blank" rel="noopener">WhatsApp</a> ';
         if ((string)$r['phone'] !== '') echo '<a class="btn sm ghost" href="tel:' . e($r['phone']) . '">☎ ' . e($r['phone']) . '</a> ';
@@ -598,7 +622,8 @@ elseif ($section === 'submissions') {
             foreach ($items as $it) echo '<tr><td><a href="' . e($siteUrl('product/' . ($it['slug'] ?? '') . '/')) . '" target="_blank">' . e($it['title'] ?? '') . '</a></td><td>' . e($it['opt'] ?? '') . '</td><td><b>' . (int)($it['qty'] ?? 1) . '</b></td></tr>';
             echo '</table>';
         }
-        if (trim((string)$r['message']) !== '') echo '<p style="margin:10px 0 0">' . nl2br(e($r['message'])) . '</p>';
+        if ($wa && trim((string)$r['message']) !== '') echo '<div class="muted" style="margin-top:10px">Текст, с которым открылся WhatsApp (клиент мог его изменить или не отправить):</div>';
+        if (trim((string)$r['message']) !== '') echo '<p style="margin:' . ($wa ? '4px' : '10px') . ' 0 0">' . nl2br(e($r['message'])) . '</p>';
         if ($r['page']) echo '<div class="muted" style="margin-top:6px">Страница: ' . e($r['page']) . '</div>';
         echo '</div>';
     }

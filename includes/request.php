@@ -5,6 +5,8 @@
  *   2) bazaya yazılır (admin → «Заявки»),
  *   3) e-poçtla göndərilir (SMTP və ya mail()),
  *   4) cavabda WhatsApp ünvanı qaytarılır — brauzer onu açır.
+ * {"kind":"wa"} — müştəri saytdakı WhatsApp düyməsinə basıb: əlaqə məlumatı yoxdur, amma keçid
+ * də «Заявки»-yə yazılır (source = whatsapp, e-poçt göndərilmir).
  * Onlayn ödəniş yoxdur.
  */
 declare(strict_types=1);
@@ -39,6 +41,52 @@ $clean = function ($v, int $max, bool $multi = false): string {
     if (!$multi) $v = str_replace(["\r", "\n", "\t"], ' ', $v);
     return mb_substr(trim((string)$v), 0, $max);
 };
+
+/* Məhsullar: yalnız id-yə etibar edirik, adları bazadan götürürük */
+$resolveItems = function ($raw) use ($clean): array {
+    $items = [];
+    foreach (array_slice(is_array($raw) ? $raw : [], 0, 50) as $it) {
+        $id = is_array($it) ? (int)($it['id'] ?? 0) : 0;
+        if ($id <= 0) continue;
+        $st = db()->prepare('SELECT p.slug, COALESCE(NULLIF(i.title, \'\'), a.title, p.slug) title FROM products p
+            LEFT JOIN product_i18n i ON i.product_id = p.id AND i.lang = ? LEFT JOIN product_i18n a ON a.product_id = p.id AND a.lang = ?
+            WHERE p.id = ? LIMIT 1');
+        $st->execute([lang(), DEFAULT_LANG, $id]);
+        if (!($p = $st->fetch())) continue;
+        $items[] = [
+            'id' => $id, 'slug' => $p['slug'], 'title' => $p['title'],
+            'qty' => max(1, min(100000, (int)($it['qty'] ?? 1))),
+            'opt' => $clean($it['opt'] ?? '', 60),
+        ];
+    }
+    return $items;
+};
+
+/* WhatsApp-a keçid — yalnız qeyd (müştəri yazışmanı WhatsApp-da davam etdirir).
+   İmzalı möhür: səhifə bu saytda son 24 saatda açılıb — kənar skriptlərə maneə.
+   Eyni IP + səhifə + məhsullar 10 dəq. ərzində bir dəfə yazılır; bir IP-dən saatda ən çox 20 qeyd. */
+if (($in['kind'] ?? '') === 'wa') {
+    if (!form_stamp_ok((string)($in['stamp'] ?? ''), 0)) out(400, ['ok' => false, 'error' => 'stamp']);
+    $ip    = client_ip();
+    $page  = $clean($in['page'] ?? '', 255);
+    $text  = $clean($in['text'] ?? '', 1000, true);
+    $items = $resolveItems($in['items'] ?? []);
+    $json  = json_encode($items, JSON_UNESCAPED_UNICODE);
+    try {
+        $st = db()->prepare("SELECT COUNT(*) c FROM submissions WHERE source = 'whatsapp' AND ip = ? AND created_at >= ?");
+        $st->execute([$ip, date('Y-m-d H:i', time() - 3600)]);
+        if ((int)$st->fetch()['c'] >= 20) out(200, ['ok' => true]);
+        $st = db()->prepare("SELECT id FROM submissions WHERE source = 'whatsapp' AND ip = ? AND page = ? AND items = ? AND created_at >= ? LIMIT 1");
+        $st->execute([$ip, $page, $json, date('Y-m-d H:i', time() - 600)]);
+        if ($st->fetch()) out(200, ['ok' => true]);
+        db()->prepare('INSERT INTO submissions (created_at, name, phone, email, company, message, items, source, lang, page, ip, mailed, is_read)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,0,0)')
+            ->execute([date('Y-m-d H:i'), '', '', '', '', $text, $json, 'whatsapp', lang(), $page, $ip]);
+    } catch (Throwable $e) {
+        error_log('api/request wa: ' . $e->getMessage());
+    }
+    out(200, ['ok' => true]);
+}
 
 $d = [
     'name'    => $clean($in['name'] ?? '', 120),
@@ -77,26 +125,11 @@ if (session_status() === PHP_SESSION_NONE) {
 $now  = time();
 $hits = array_values(array_filter((array)($_SESSION['req_hits'] ?? []), function ($t) use ($now) { return is_int($t) && $t > $now - 3600; }));
 $byIp = 0;
-try { $st = db()->prepare('SELECT COUNT(*) c FROM submissions WHERE ip = ? AND created_at >= ?'); $st->execute([$ip, date('Y-m-d H:i', $now - 3600)]); $byIp = (int)$st->fetch()['c']; } catch (Throwable $e) {}
+try { $st = db()->prepare('SELECT COUNT(*) c FROM submissions WHERE ip = ? AND created_at >= ? AND source <> \'whatsapp\''); $st->execute([$ip, date('Y-m-d H:i', $now - 3600)]); $byIp = (int)$st->fetch()['c']; } catch (Throwable $e) {}
 if (count($hits) >= 6 || $byIp >= 15) out(429, ['ok' => false, 'error' => t('msg.toomany')]);
 $hits[] = $now; $_SESSION['req_hits'] = $hits;
 
-/* Məhsullar: yalnız id-yə etibar edirik, adları bazadan götürürük */
-$items = [];
-foreach (array_slice((array)($in['items'] ?? []), 0, 50) as $it) {
-    $id = (int)($it['id'] ?? 0);
-    if ($id <= 0) continue;
-    $st = db()->prepare('SELECT p.slug, COALESCE(NULLIF(i.title, \'\'), a.title, p.slug) title FROM products p
-        LEFT JOIN product_i18n i ON i.product_id = p.id AND i.lang = ? LEFT JOIN product_i18n a ON a.product_id = p.id AND a.lang = ?
-        WHERE p.id = ? LIMIT 1');
-    $st->execute([lang(), DEFAULT_LANG, $id]);
-    if (!($p = $st->fetch())) continue;
-    $items[] = [
-        'id' => $id, 'slug' => $p['slug'], 'title' => $p['title'],
-        'qty' => max(1, min(100000, (int)($it['qty'] ?? 1))),
-        'opt' => $clean($it['opt'] ?? '', 60),
-    ];
-}
+$items = $resolveItems($in['items'] ?? []);
 
 /* Mətn: e-poçt və WhatsApp üçün eyni */
 $lines = [];
@@ -123,14 +156,17 @@ try {
         ->execute([date('Y-m-d H:i'), $d['name'], $d['phone'], $d['email'], $d['topic'], $d['message'],
                    json_encode($items, JSON_UNESCAPED_UNICODE), $items ? 'cart' : 'form', lang(), $d['page'], $ip]);
     $id = (int)db()->lastInsertId();
-} catch (Throwable $e) {}
+} catch (Throwable $e) {
+    error_log('api/request insert: ' . $e->getMessage());
+}
 
 $mailErr = '';
 $subject = t('mail.subject') . ': ' . $d['name'] . ($items ? ' (' . count($items) . ')' : '');
 $sent = send_mail(setting('mail_to') ?: setting('email'), $subject, $body, $d['email'], $mailErr);
 if ($id) { try { db()->prepare('UPDATE submissions SET mailed = ? WHERE id = ?')->execute([$sent ? 1 : 0, $id]); } catch (Throwable $e) {} }
-if (!$sent && !$id) {
-    @file_put_contents(ROOT_DIR . '/storage/requests.log', $body . "\n" . str_repeat('=', 60) . "\n", FILE_APPEND);
+/* Bazaya yazıla bilməyibsə sorğu itməsin: fayla yazılır, admin → «Заявки» onu göstərir */
+if (!$id) {
+    @file_put_contents(ROOT_DIR . '/storage/requests.log', $body . "\n" . str_repeat('=', 60) . "\n", FILE_APPEND | LOCK_EX);
 }
 
 /* WhatsApp mesajı */

@@ -36,6 +36,7 @@ includes/
   bootstrap.php      konfiqurasiya, dil, baza, köməkçilər, SMTP
   layout.php         head / header / footer / məhsul kartı / sorğu siyahısı
   request.php        POST /api/request — sorğu: baza + e-poçt + WhatsApp linki
+                     (saytdakı WhatsApp düymələrinə klik də «Заявки»-yə yazılır, source = whatsapp)
   lang/az.php ru.php interfeys sətirləri
 pages/               home, shop, product, page (mətn səhifələri), about, contact, 404, sitemap
 admin/               panel (index.php), lib.php, schema.php, seed.php, import.php, install.php
@@ -64,7 +65,7 @@ Köhnə WordPress ünvanları 301 ilə yönləndirilir: `/contact-us/ → /elaqe
 | Bölmə | Nə idarə olunur |
 |---|---|
 | Обзор | statistika, son sorğular, kataloqun vəziyyəti |
-| Заявки | saytdan gələn sorğular: məhsullar, miqdar, WhatsApp/zəng düymələri |
+| Заявки | saytdan gələn bütün sorğular (forma, sorğu siyahısı, WhatsApp düyməsinə keçid), filtr, WhatsApp/zəng düymələri; bazaya yazılmayanlar `storage/requests.log`-dan göstərilir |
 | Товары | ad / təsvir / xüsusiyyətlər / SEO (AZ, RU), şəkil + qalereya, qiymət, variantlar, kateqoriyalar, «ana səhifədə» |
 | Категории | ad, təsvir, SEO, şəkil, sıra |
 | Страницы | Haqqımızda, WELDER, Şirkət haqqında və yeni səhifələr |
